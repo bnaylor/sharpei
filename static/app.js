@@ -7,6 +7,7 @@ function sharpei() {
         newCategoryName: '',
         newTaskTitle: '',
         expandedTasks: [],
+        searchQuery: '',
 
         init() {
             this.fetchCategories().then(() => {
@@ -23,9 +24,12 @@ function sharpei() {
         },
 
         fetchTasks() {
-            let url = '/api/tasks';
+            let url = '/api/tasks?';
             if (this.selectedCategory) {
-                url += `?category_id=${this.selectedCategory}`;
+                url += `category_id=${this.selectedCategory}&`;
+            }
+            if (this.searchQuery) {
+                url += `q=${encodeURIComponent(this.searchQuery)}`;
             }
             fetch(url)
                 .then(res => res.json())
@@ -37,6 +41,20 @@ function sharpei() {
                         category_id: t.category_id !== null ? t.category_id.toString() : ""
                     }));
                 });
+        },
+
+        searchTasks() {
+            this.fetchTasks();
+        },
+        
+        clearSearch() {
+            this.searchQuery = '';
+            this.fetchTasks();
+        },
+
+        filterByTag(tag) {
+            this.searchQuery = tag;
+            this.fetchTasks();
         },
 
         selectCategory(id) {

@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List
 
 from . import models, schemas, database
@@ -33,10 +34,23 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
 
 # Tasks
 @app.get("/api/tasks", response_model=List[schemas.TaskWithSubtasks])
-def get_tasks(category_id: int = None, db: Session = Depends(get_db)):
-    query = db.query(models.Task).filter(models.Task.parent_id == None)
+def get_tasks(category_id: int = None, q: str = None, db: Session = Depends(get_db)):
+    query = db.query(models.Task)
+    
+    if q:
+        search_filter = or_(
+            models.Task.title.contains(q),
+            models.Task.description.contains(q),
+            models.Task.hashtags.contains(q)
+        )
+        query = query.filter(search_filter)
+    else:
+        # Only show top-level tasks if not searching
+        query = query.filter(models.Task.parent_id == None)
+
     if category_id:
         query = query.filter(models.Task.category_id == category_id)
+        
     return query.order_by(models.Task.priority.asc(), models.Task.id.desc()).all()
 
 @app.post("/api/tasks", response_model=schemas.Task)

@@ -56,4 +56,8 @@ body {
     color: #0d6efd;
 }
 
+.cursor-pointer {
+    cursor: pointer;
+}
+
 [x-cloak] { display: none !important; }

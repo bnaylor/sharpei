@@ -42,6 +42,13 @@
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2" x-text="selectedCategoryName"></h1>
+                    <div class="ms-auto col-md-4">
+                         <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search..." x-model="searchQuery" @keyup.enter="searchTasks()">
+                            <button class="btn btn-outline-secondary" type="button" @click="searchTasks()"><i class="bi bi-search"></i></button>
+                            <button class="btn btn-outline-secondary" type="button" x-show="searchQuery" @click="clearSearch()"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Quick Add -->
@@ -63,7 +70,10 @@
                                 <span class="flex-grow-1 task-title" :class="task.completed ? 'text-decoration-line-through' : ''" x-text="task.title" @click="toggleExpand(task)"></span>
                                 <div class="task-meta d-flex align-items-center">
                                     <template x-if="task.hashtags">
-                                        <span class="small text-primary me-2" x-text="task.hashtags"></span>
+                                        <span class="small text-primary me-2 cursor-pointer" 
+                                              x-text="task.hashtags" 
+                                              @click.stop="filterByTag(task.hashtags)" 
+                                              title="Filter by tag"></span>
                                     </template>
                                     <span class="text-muted small me-2" x-show="task.due_date" x-text="formatDate(task.due_date)"></span>
                                     <button class="btn btn-sm btn-link text-danger p-0 ms-2" @click.stop="deleteTask(task.id)"><i class="bi bi-trash"></i></button>
