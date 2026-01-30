@@ -9,12 +9,13 @@ function sharpei() {
         expandedTasks: [],
 
         init() {
-            this.fetchCategories();
-            this.fetchTasks();
+            this.fetchCategories().then(() => {
+                this.fetchTasks();
+            });
         },
 
         fetchCategories() {
-            fetch('/api/categories')
+            return fetch('/api/categories')
                 .then(res => res.json())
                 .then(data => {
                     this.categories = data;
@@ -32,7 +33,8 @@ function sharpei() {
                     this.tasks = data.map(t => ({
                         ...t,
                         due_date_str: t.due_date ? t.due_date.split('T')[0] : '',
-                        newSubtaskTitle: ''
+                        newSubtaskTitle: '',
+                        category_id: t.category_id !== null ? t.category_id.toString() : ""
                     }));
                 });
         },
@@ -104,7 +106,7 @@ function sharpei() {
                 priority: parseInt(task.priority),
                 hashtags: task.hashtags,
                 completed: task.completed,
-                category_id: task.category_id,
+                category_id: (task.category_id && task.category_id !== "") ? parseInt(task.category_id) : null,
                 parent_id: task.parent_id
             };
 

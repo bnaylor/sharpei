@@ -94,6 +94,14 @@
                                         </select>
                                     </div>
                                     <div class="col-auto">
+                                        <select class="form-select form-select-sm" x-model="task.category_id">
+                                            <option value="">No Category</option>
+                                            <template x-for="cat in categories" :key="cat.id">
+                                                <option :value="cat.id.toString()" x-text="cat.name" :selected="task.category_id === cat.id.toString()"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div class="col-auto">
                                         <input type="text" class="form-control form-control-sm" x-model="task.hashtags" placeholder="#tags">
                                     </div>
                                     <div class="col-auto ms-auto">
