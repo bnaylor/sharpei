@@ -39,9 +39,9 @@ def get_tasks(category_id: int = None, q: str = None, db: Session = Depends(get_
     
     if q:
         search_filter = or_(
-            models.Task.title.contains(q),
-            models.Task.description.contains(q),
-            models.Task.hashtags.contains(q)
+            models.Task.title.ilike(f"%{q}%"),
+            models.Task.description.ilike(f"%{q}%"),
+            models.Task.hashtags.ilike(f"%{q}%")
         )
         query = query.filter(search_filter)
     else:
@@ -54,9 +54,8 @@ def get_tasks(category_id: int = None, q: str = None, db: Session = Depends(get_
     return query.order_by(models.Task.priority.asc(), models.Task.position.asc(), models.Task.id.desc()).all()
 
 @app.post("/api/tasks/reorder")
-def reorder_tasks(payload: dict, db: Session = Depends(get_db)):
-    task_ids = payload.get("task_ids", [])
-    for index, task_id in enumerate(task_ids):
+def reorder_tasks(payload: schemas.ReorderPayload, db: Session = Depends(get_db)):
+    for index, task_id in enumerate(payload.task_ids):
         db.query(models.Task).filter(models.Task.id == task_id).update({"position": index})
     db.commit()
     return {"message": "Reordered successfully"}
@@ -90,3 +89,15 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.delete(db_task)
     db.commit()
     return {"message": "Task deleted"}
+
+# Category deletion
+@app.delete("/api/categories/{category_id}")
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    db_category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    if not db_category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    # Set tasks in this category to no category
+    db.query(models.Task).filter(models.Task.category_id == category_id).update({"category_id": None})
+    db.delete(db_category)
+    db.commit()
+    return {"message": "Category deleted"}

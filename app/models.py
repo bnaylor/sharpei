@@ -26,5 +26,5 @@ class Task(Base):
     category = relationship("Category", back_populates="tasks")
 
     parent_id = Column(Integer, ForeignKey("tasks.id"), nullable=True)
-    subtasks = relationship("Task", back_populates="parent")
+    subtasks = relationship("Task", back_populates="parent", cascade="all, delete-orphan")
     parent = relationship("Task", back_populates="subtasks", remote_side=[id])

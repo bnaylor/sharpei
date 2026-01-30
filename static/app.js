@@ -23,6 +23,17 @@ function sharpei() {
                 });
         },
 
+        transformTask(t) {
+            return {
+                ...t,
+                due_date_str: t.due_date ? t.due_date.split('T')[0] : '',
+                newSubtaskTitle: '',
+                category_id: t.category_id !== null ? t.category_id.toString() : "",
+                tags_array: t.hashtags ? t.hashtags.split(/[\s,]+/).filter(tag => tag.length > 0) : [],
+                subtasks: (t.subtasks || []).map(sub => this.transformTask(sub))
+            };
+        },
+
         fetchTasks() {
             let url = '/api/tasks?';
             if (this.selectedCategory) {
@@ -37,13 +48,7 @@ function sharpei() {
                     return res.json();
                 })
                 .then(data => {
-                    this.tasks = data.map(t => ({
-                        ...t,
-                        due_date_str: t.due_date ? t.due_date.split('T')[0] : '',
-                        newSubtaskTitle: '',
-                        category_id: t.category_id !== null ? t.category_id.toString() : "",
-                        tags_array: t.hashtags ? t.hashtags.split(/[\s,]+/).filter(tag => tag.length > 0) : []
-                    }));
+                    this.tasks = data.map(t => this.transformTask(t));
                 })
                 .catch(err => console.error(err));
         },
@@ -123,6 +128,21 @@ function sharpei() {
                 this.fetchCategories();
             })
             .catch(err => console.error(err));
+        },
+
+        deleteCategory(id) {
+            if (!confirm('Delete this category? Tasks will be moved to "No Category".')) return;
+            fetch(`/api/categories/${id}`, { method: 'DELETE' })
+                .then(res => {
+                    if (!res.ok) throw new Error('Delete category failed');
+                    if (this.selectedCategory === id) {
+                        this.selectedCategory = null;
+                        this.selectedCategoryName = 'All Tasks';
+                    }
+                    this.fetchCategories();
+                    this.fetchTasks();
+                })
+                .catch(err => console.error(err));
         },
 
         addTask() {

@@ -2,6 +2,10 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
+
+class ReorderPayload(BaseModel):
+    task_ids: List[int]
+
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
