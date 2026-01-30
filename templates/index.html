@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sharpei - TODO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body x-data="sharpei()">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <h5 class="px-3">Categories</h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" :class="selectedCategory === null ? 'active fw-bold' : ''" href="#" @click="selectCategory(null)">
+                                All Tasks
+                            </a>
+                        </li>
+                        <template x-for="cat in categories" :key="cat.id">
+                            <li class="nav-item">
+                                <a class="nav-link" :class="selectedCategory === cat.id ? 'active fw-bold' : ''" href="#" @click="selectCategory(cat.id)" x-text="cat.name"></a>
+                            </li>
+                        </template>
+                    </ul>
+                    <div class="px-3 mt-3">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" placeholder="New category" x-model="newCategoryName" @keyup.enter="addCategory()">
+                            <button class="btn btn-outline-secondary" type="button" @click="addCategory()"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2" x-text="selectedCategoryName"></h1>
+                </div>
+
+                <!-- Quick Add -->
+                <div class="mb-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Add a task..." x-model="newTaskTitle" @keyup.enter="addTask()">
+                        <button class="btn btn-primary" type="button" @click="addTask()">Add Task</button>
+                    </div>
+                </div>
+
+                <!-- Task List -->
+                <div class="task-list">
+                    <template x-for="task in tasks" :key="task.id">
+                        <div class="task-item-container">
+                            <div class="task-item d-flex align-items-center p-2 border-bottom" 
+                                 :class="task.completed ? 'text-muted' : ''"
+                                 :style="task.priority == 2 ? 'border-left: 4px solid #dc3545' : (task.priority == 1 ? 'border-left: 4px solid #ffc107' : '')">
+                                <input class="form-check-input me-2" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)">
+                                <span class="flex-grow-1 task-title" :class="task.completed ? 'text-decoration-line-through' : ''" x-text="task.title" @click="toggleExpand(task)"></span>
+                                <div class="task-meta d-flex align-items-center">
+                                    <template x-if="task.hashtags">
+                                        <span class="small text-primary me-2" x-text="task.hashtags"></span>
+                                    </template>
+                                    <span class="text-muted small me-2" x-show="task.due_date" x-text="formatDate(task.due_date)"></span>
+                                    <button class="btn btn-sm btn-link text-danger p-0 ms-2" @click.stop="deleteTask(task.id)"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                            
+                            <!-- Expanded Task Details -->
+                            <div class="task-details p-3 bg-light border-start border-end" x-show="expandedTasks.includes(task.id)">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="small text-muted">Description (Markdown)</label>
+                                        <textarea class="form-control form-control-sm" rows="5" x-model="task.description" placeholder="Markdown..."></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small text-muted">Preview</label>
+                                        <div class="p-2 border rounded bg-white shadow-sm overflow-auto" style="height: 125px;" x-html="marked.parse(task.description || '')"></div>
+                                    </div>
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto">
+                                        <input type="date" class="form-control form-control-sm" x-model="task.due_date_str">
+                                    </div>
+                                    <div class="col-auto">
+                                        <select class="form-select form-select-sm" x-model="task.priority">
+                                            <option value="0">Priority 0</option>
+                                            <option value="1">Priority 1</option>
+                                            <option value="2">Priority 2</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input type="text" class="form-control form-control-sm" x-model="task.hashtags" placeholder="#tags">
+                                    </div>
+                                    <div class="col-auto ms-auto">
+                                        <button class="btn btn-sm btn-success" @click="saveTask(task)">Save</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Subtasks -->
+                                <div class="mt-3 ms-4">
+                                    <h6>Subtasks</h6>
+                                    <template x-for="sub in task.subtasks" :key="sub.id">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <input class="form-check-input me-2" type="checkbox" :checked="sub.completed" @change="toggleTask(sub)">
+                                            <span class="small" :class="sub.completed ? 'text-decoration-line-through' : ''" x-text="sub.title"></span>
+                                        </div>
+                                    </template>
+                                    <div class="input-group input-group-sm mt-2">
+                                        <input type="text" class="form-control" placeholder="Add subtask..." x-model="task.newSubtaskTitle" @keyup.enter="addSubtask(task)">
+                                        <button class="btn btn-outline-secondary" type="button" @click="addSubtask(task)">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+INFO:     Application startup complete.
+INFO:     127.0.0.1:58042 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58042 - "GET /static/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58044 - "GET /static/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58042 - "GET /api/categories HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58044 - "GET /api/tasks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58042 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58052 - "POST /api/tasks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58052 - "GET /api/tasks HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/uvicorn/protocols/http/h11_impl.py", line 410, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/fastapi/applications.py", line 1135, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/fastapi/routing.py", line 115, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/fastapi/routing.py", line 101, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/fastapi/routing.py", line 377, in app
+    content = await serialize_response(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+    )
+    ^
+  File "/Users/bnaylor/src/sharpei/venv/lib/python3.14/site-packages/fastapi/routing.py", line 215, in serialize_response
+    raise ResponseValidationError(
+    ...<3 lines>...
+    )
+fastapi.exceptions.ResponseValidationError: 1 validation error:
+  {'type': 'list_type', 'loc': ('response', 0, 'subtasks'), 'msg': 'Input should be a valid list', 'input': None}
+
+  File "/Users/bnaylor/src/sharpei/app/main.py", line 35, in get_tasks
+    GET /api/tasks
+

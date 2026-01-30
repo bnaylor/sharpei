@@ -1,0 +1,39 @@
+## Sharpei Requirements
+
+### Summary
+
+Sharpei will be a focused TODO application conceptually akin to MyTinyTodo: https://www.mytinytodo.net/
+
+I have started a new job at Google and I need to keep track of tasks in a better way than I have been doing
+recently.  This new role will be challenging and I need to do better.  I have used "Get Things Done" in the past
+to some good effect, and I do appreciate a good graphical user interface for managing TODOs.  Unfortunately
+the applications I am aware of all suffer from some fatal flaw that prevent them being usable in this context.
+
+#### Existing apps and their problems
+- MyTinyTodo: I really like this one but it requires PHP and a web server, which doesn't fly at Google
+- OmniFocus: This is close, but it's too complicated and the database is opaque and not consumable by AI.  I spend more time
+curating the meta experience than getting anything done.
+- NotePlan: Nice but does too much that overlaps with Google Workspace, not just a TODO application at all.  While I would like a less friction-ful note-taking app, I think I need to stick with the Google ecosystem for that.
+- Todoist and other web-based things: can't use cloud apps
+- Google Tasks: too basic, and isn't even accessible by Gemini!
+
+### Requirements
+- Runs locally on a mac laptop, does not require Internet connection to operate
+- Low UX friction for adding and updating todos
+- Interpreted language to avoid Google binary-checking: python preferred
+- No independent web server or database processes required, served from python directly
+- A decent ui framework that can approximate the usability of mytinytodo
+- sqlite database and/or flat markdown files for data storage
+- data can be easily indexed by Gemini or other AI / agents
+- Left-hand navigation column allows creation of different categories or projects to provide top-level segregation of TODOs of different types
+- TODOs are checkbox items that can be nested
+- Relatively compact UI for displaying the main list of TODOs
+- TODOs can be expanded to display more information about a given entry
+- Data items pertaining to a todo entry:
+  - title
+  - due date
+  - description (free-form markdown text)
+  - list of hashtags
+  - priority (0-2)
+
+
