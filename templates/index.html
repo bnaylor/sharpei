@@ -69,10 +69,10 @@
                                 <input class="form-check-input me-2" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)">
                                 <span class="flex-grow-1 task-title" :class="task.completed ? 'text-decoration-line-through' : ''" x-text="task.title" @click="toggleExpand(task)"></span>
                                 <div class="task-meta d-flex align-items-center">
-                                    <template x-if="task.hashtags">
-                                        <span class="small text-primary me-2 cursor-pointer" 
-                                              x-text="task.hashtags" 
-                                              @click.stop="filterByTag(task.hashtags)" 
+                                    <template x-for="tag in task.tags_array">
+                                        <span class="badge bg-light text-primary border me-1 cursor-pointer" 
+                                              x-text="tag" 
+                                              @click.stop="filterByTag(tag)" 
                                               title="Filter by tag"></span>
                                     </template>
                                     <span class="text-muted small me-2" x-show="task.due_date" x-text="formatDate(task.due_date)"></span>

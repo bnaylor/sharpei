@@ -38,7 +38,8 @@ function sharpei() {
                         ...t,
                         due_date_str: t.due_date ? t.due_date.split('T')[0] : '',
                         newSubtaskTitle: '',
-                        category_id: t.category_id !== null ? t.category_id.toString() : ""
+                        category_id: t.category_id !== null ? t.category_id.toString() : "",
+                        tags_array: t.hashtags ? t.hashtags.split(/[\s,]+/).filter(tag => tag.length > 0) : []
                     }));
                 });
         },
