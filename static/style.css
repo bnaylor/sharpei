@@ -39,6 +39,26 @@ body {
     padding: 2px 0;
 }
 
+.drag-handle {
+    cursor: grab;
+    padding: 0 5px;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.priority-header {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #eee;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #e9ecef !important;
+}
+
 .form-check-input {
     margin-top: 0;
 }

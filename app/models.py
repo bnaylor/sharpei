@@ -18,6 +18,7 @@ class Task(Base):
     description = Column(Text, nullable=True)
     due_date = Column(DateTime, nullable=True)
     priority = Column(Integer, default=1) # 0 (High), 1 (Normal), 2 (Low)
+    position = Column(Integer, default=0)
     hashtags = Column(String, nullable=True) # Stored as space-separated or comma-separated string
     completed = Column(Boolean, default=False)
     

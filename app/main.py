@@ -51,7 +51,15 @@ def get_tasks(category_id: int = None, q: str = None, db: Session = Depends(get_
     if category_id:
         query = query.filter(models.Task.category_id == category_id)
         
-    return query.order_by(models.Task.priority.asc(), models.Task.id.desc()).all()
+    return query.order_by(models.Task.priority.asc(), models.Task.position.asc(), models.Task.id.desc()).all()
+
+@app.post("/api/tasks/reorder")
+def reorder_tasks(payload: dict, db: Session = Depends(get_db)):
+    task_ids = payload.get("task_ids", [])
+    for index, task_id in enumerate(task_ids):
+        db.query(models.Task).filter(models.Task.id == task_id).update({"position": index})
+    db.commit()
+    return {"message": "Reordered successfully"}
 
 @app.post("/api/tasks", response_model=schemas.Task)
 def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):

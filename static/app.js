@@ -32,7 +32,10 @@ function sharpei() {
                 url += `q=${encodeURIComponent(this.searchQuery)}`;
             }
             fetch(url)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('Fetch failed');
+                    return res.json();
+                })
                 .then(data => {
                     this.tasks = data.map(t => ({
                         ...t,
@@ -41,7 +44,8 @@ function sharpei() {
                         category_id: t.category_id !== null ? t.category_id.toString() : "",
                         tags_array: t.hashtags ? t.hashtags.split(/[\s,]+/).filter(tag => tag.length > 0) : []
                     }));
-                });
+                })
+                .catch(err => console.error(err));
         },
 
         searchTasks() {
@@ -56,6 +60,43 @@ function sharpei() {
         filterByTag(tag) {
             this.searchQuery = tag;
             this.fetchTasks();
+        },
+
+        initSortable(el, priority) {
+            new Sortable(el, {
+                group: 'tasks',
+                animation: 150,
+                handle: '.drag-handle',
+                onEnd: (evt) => {
+                    const taskId = evt.item.getAttribute('data-id');
+                    const fromList = evt.from;
+                    const toList = evt.to;
+                    
+                    const newPriority = parseInt(toList.id.replace('list-p', ''));
+                    const taskIds = Array.from(toList.querySelectorAll('.task-item-container')).map(item => item.getAttribute('data-id'));
+                    
+                    // 1. Save new order
+                    fetch('/api/tasks/reorder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ task_ids: taskIds })
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error('Reorder failed');
+                        // 2. If the group changed, update the priority of the moved task
+                        if (fromList !== toList) {
+                            const task = this.tasks.find(t => t.id == taskId);
+                            if (task) {
+                                task.priority = newPriority;
+                                this.saveTask(task);
+                            }
+                        } else {
+                            this.fetchTasks();
+                        }
+                    })
+                    .catch(err => console.error(err));
+                }
+            });
         },
 
         selectCategory(id) {
@@ -75,25 +116,34 @@ function sharpei() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: this.newCategoryName })
-            }).then(() => {
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Add category failed');
                 this.newCategoryName = '';
                 this.fetchCategories();
-            });
+            })
+            .catch(err => console.error(err));
         },
 
         addTask() {
             if (!this.newTaskTitle.trim()) return;
+            const data = {
+                title: this.newTaskTitle,
+                category_id: this.selectedCategory,
+                priority: 1, // Default to Normal
+                position: 0
+            };
             fetch('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: this.newTaskTitle,
-                    category_id: this.selectedCategory
-                })
-            }).then(() => {
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Add task failed');
                 this.newTaskTitle = '';
                 this.fetchTasks();
-            });
+            })
+            .catch(err => console.error(err));
         },
 
         addSubtask(parentTask) {
@@ -104,12 +154,16 @@ function sharpei() {
                 body: JSON.stringify({
                     title: parentTask.newSubtaskTitle,
                     category_id: this.selectedCategory,
-                    parent_id: parentTask.id
+                    parent_id: parentTask.id,
+                    priority: parentTask.priority
                 })
-            }).then(() => {
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Add subtask failed');
                 parentTask.newSubtaskTitle = '';
                 this.fetchTasks();
-            });
+            })
+            .catch(err => console.error(err));
         },
 
         toggleTask(task) {
@@ -123,6 +177,7 @@ function sharpei() {
                 description: task.description,
                 due_date: task.due_date_str ? new Date(task.due_date_str).toISOString() : null,
                 priority: parseInt(task.priority),
+                position: task.position || 0,
                 hashtags: task.hashtags,
                 completed: task.completed,
                 category_id: (task.category_id && task.category_id !== "") ? parseInt(task.category_id) : null,
@@ -133,9 +188,12 @@ function sharpei() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
-            }).then(() => {
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Save task failed');
                 this.fetchTasks();
-            });
+            })
+            .catch(err => console.error(err));
         },
 
         deleteTask(id) {
