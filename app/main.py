@@ -37,7 +37,7 @@ def get_tasks(category_id: int = None, db: Session = Depends(get_db)):
     query = db.query(models.Task).filter(models.Task.parent_id == None)
     if category_id:
         query = query.filter(models.Task.category_id == category_id)
-    return query.all()
+    return query.order_by(models.Task.priority.asc(), models.Task.id.desc()).all()
 
 @app.post("/api/tasks", response_model=schemas.Task)
 def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):

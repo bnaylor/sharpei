@@ -58,7 +58,7 @@
                         <div class="task-item-container">
                             <div class="task-item d-flex align-items-center p-2 border-bottom" 
                                  :class="task.completed ? 'text-muted' : ''"
-                                 :style="task.priority == 2 ? 'border-left: 4px solid #dc3545' : (task.priority == 1 ? 'border-left: 4px solid #ffc107' : '')">
+                                 :style="task.priority == 0 ? 'border-left: 4px solid #dc3545' : (task.priority == 2 ? 'border-left: 4px solid #0d6efd' : 'border-left: 4px solid transparent')">
                                 <input class="form-check-input me-2" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)">
                                 <span class="flex-grow-1 task-title" :class="task.completed ? 'text-decoration-line-through' : ''" x-text="task.title" @click="toggleExpand(task)"></span>
                                 <div class="task-meta d-flex align-items-center">
@@ -88,9 +88,9 @@
                                     </div>
                                     <div class="col-auto">
                                         <select class="form-select form-select-sm" x-model="task.priority">
-                                            <option value="0">Priority 0</option>
-                                            <option value="1">Priority 1</option>
-                                            <option value="2">Priority 2</option>
+                                            <option value="0">High (P0)</option>
+                                            <option value="1">Normal (P1)</option>
+                                            <option value="2">Low (P2)</option>
                                         </select>
                                     </div>
                                     <div class="col-auto">
