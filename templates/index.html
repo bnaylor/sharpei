@@ -71,11 +71,23 @@
                 </div>
 
                 <!-- Quick Add -->
-                <div class="mb-4">
+                <div class="mb-3">
                     <div class="input-group">
                         <input type="text" class="form-control" placeholder="Add a task..." x-model="newTaskTitle" @keyup.enter="addTask()">
                         <button class="btn btn-primary" type="button" @click="addTask()">Add Task</button>
                     </div>
+                </div>
+
+                <!-- Task Actions -->
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" @click="archiveCompleted()" title="Archive completed tasks (Ctrl+Shift+A)">
+                        <i class="bi bi-archive"></i> Clean Up
+                    </button>
+                    <button class="btn btn-sm" :class="showArchived ? 'btn-secondary' : 'btn-outline-secondary'" @click="toggleShowArchived()" title="Toggle archived tasks (Ctrl+Shift+H)">
+                        <i class="bi bi-eye" x-show="!showArchived"></i>
+                        <i class="bi bi-eye-slash" x-show="showArchived"></i>
+                        <span x-text="showArchived ? 'Hiding Archived' : 'Show Archived'"></span>
+                    </button>
                 </div>
 
                 <!-- Loading Spinner -->
@@ -93,8 +105,8 @@
                             <div :id="'list-p' + p" class="sortable-list" x-init="initSortable($el, p)">
                                 <template x-for="task in tasks.filter(t => t.priority == p)" :key="task.id">
                                     <div class="task-item-container" :data-id="task.id">
-                                        <div class="task-item d-flex align-items-center p-2 border-bottom" 
-                                             :class="task.completed ? 'text-muted' : ''"
+                                        <div class="task-item d-flex align-items-center p-2 border-bottom"
+                                             :class="{'text-muted': task.completed, 'archived': task.archived}"
                                              :style="task.priority == 0 ? 'border-left: 4px solid #dc3545' : (task.priority == 2 ? 'border-left: 4px solid #0d6efd' : 'border-left: 4px solid transparent')">
                                             <i class="bi bi-grip-vertical text-muted me-1 drag-handle"></i>
                                             <input class="form-check-input me-2" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)">

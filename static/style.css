@@ -126,4 +126,9 @@ body {
     font-weight: 600;
 }
 
+.task-item.archived {
+    opacity: 0.6;
+    background-color: #f8f9fa;
+}
+
 [x-cloak] { display: none !important; }

@@ -14,6 +14,7 @@ class TaskBase(BaseModel):
     position: Optional[int] = None
     hashtags: Optional[str] = None
     completed: bool = False
+    archived: bool = False
     category_id: Optional[int] = None
     parent_id: Optional[int] = None
 

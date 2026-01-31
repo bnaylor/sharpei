@@ -21,7 +21,8 @@ class Task(Base):
     position = Column(Integer, default=0)
     hashtags = Column(String, nullable=True) # Stored as space-separated or comma-separated string
     completed = Column(Boolean, default=False)
-    
+    archived = Column(Boolean, default=False)
+
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     category = relationship("Category", back_populates="tasks")
 

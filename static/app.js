@@ -10,6 +10,7 @@ function sharpei() {
         searchQuery: '',
         loading: false,
         error: null,
+        showArchived: false,
 
         showError(message) {
             this.error = message;
@@ -19,6 +20,23 @@ function sharpei() {
         init() {
             this.fetchCategories().then(() => {
                 this.fetchTasks();
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Ignore if typing in an input field
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                // Ctrl/Cmd + Shift + A: Archive completed tasks
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+                    e.preventDefault();
+                    this.archiveCompleted();
+                }
+                // Ctrl/Cmd + Shift + H: Toggle show archived
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'H') {
+                    e.preventDefault();
+                    this.toggleShowArchived();
+                }
             });
         },
 
@@ -47,7 +65,10 @@ function sharpei() {
                 url += `category_id=${this.selectedCategory}&`;
             }
             if (this.searchQuery) {
-                url += `q=${encodeURIComponent(this.searchQuery)}`;
+                url += `q=${encodeURIComponent(this.searchQuery)}&`;
+            }
+            if (this.showArchived) {
+                url += `show_archived=true`;
             }
             this.loading = true;
             fetch(url)
@@ -196,6 +217,10 @@ function sharpei() {
 
         toggleTask(task) {
             task.completed = !task.completed;
+            // If uncompleting a task, also unarchive it
+            if (!task.completed) {
+                task.archived = false;
+            }
             this.saveTask(task);
         },
 
@@ -208,6 +233,7 @@ function sharpei() {
                 position: task.position || 0,
                 hashtags: task.hashtags,
                 completed: task.completed,
+                archived: task.archived || false,
                 category_id: (task.category_id && task.category_id !== "") ? parseInt(task.category_id) : null,
                 parent_id: task.parent_id
             };
@@ -233,6 +259,27 @@ function sharpei() {
                     })
                     .catch(err => this.showError(err.message));
             }
+        },
+
+        archiveCompleted() {
+            let url = '/api/tasks/archive-completed';
+            if (this.selectedCategory) {
+                url += `?category_id=${this.selectedCategory}`;
+            }
+            fetch(url, { method: 'POST' })
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to archive tasks');
+                    return res.json();
+                })
+                .then(data => {
+                    this.fetchTasks();
+                })
+                .catch(err => this.showError(err.message));
+        },
+
+        toggleShowArchived() {
+            this.showArchived = !this.showArchived;
+            this.fetchTasks();
         },
 
         toggleExpand(task) {

@@ -35,9 +35,9 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
 
 # Tasks
 @app.get("/api/tasks", response_model=List[schemas.TaskWithSubtasks])
-def get_tasks(category_id: int = None, q: str = None, db: Session = Depends(get_db)):
+def get_tasks(category_id: int = None, q: str = None, show_archived: bool = False, db: Session = Depends(get_db)):
     query = db.query(models.Task)
-    
+
     if q:
         search_filter = or_(
             models.Task.title.ilike(f"%{q}%"),
@@ -49,10 +49,28 @@ def get_tasks(category_id: int = None, q: str = None, db: Session = Depends(get_
         # Only show top-level tasks if not searching
         query = query.filter(models.Task.parent_id == None)
 
+    # Filter archived tasks unless explicitly requested
+    if not show_archived:
+        query = query.filter(models.Task.archived == False)
+
     if category_id:
         query = query.filter(models.Task.category_id == category_id)
-        
+
     return query.order_by(models.Task.priority.asc(), models.Task.position.asc(), models.Task.id.desc()).all()
+
+@app.post("/api/tasks/archive-completed")
+def archive_completed_tasks(category_id: int = None, db: Session = Depends(get_db)):
+    """Archive all completed tasks (optionally filtered by category)."""
+    query = db.query(models.Task).filter(
+        models.Task.completed == True,
+        models.Task.archived == False
+    )
+    if category_id:
+        query = query.filter(models.Task.category_id == category_id)
+
+    count = query.update({"archived": True})
+    db.commit()
+    return {"message": f"Archived {count} completed tasks"}
 
 @app.post("/api/tasks/reorder")
 def reorder_tasks(payload: schemas.ReorderPayload, db: Session = Depends(get_db)):
