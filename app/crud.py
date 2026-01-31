@@ -111,7 +111,7 @@ def archive_completed_tasks(db: Session, category_id: Optional[int] = None):
         models.Task.completed == True,
         models.Task.archived == False
     )
-    if category_id:
+    if category_id is not None:
         query = query.filter(models.Task.category_id == category_id)
 
     count = query.update({"archived": True})
