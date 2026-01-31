@@ -11,7 +11,7 @@ class TaskBase(BaseModel):
     description: Optional[str] = None
     due_date: Optional[datetime] = None
     priority: int = 1
-    position: int = 0
+    position: Optional[int] = None
     hashtags: Optional[str] = None
     completed: bool = False
     category_id: Optional[int] = None

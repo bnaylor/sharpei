@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import List
 
 from . import models, schemas, database
@@ -62,7 +62,15 @@ def reorder_tasks(payload: schemas.ReorderPayload, db: Session = Depends(get_db)
 
 @app.post("/api/tasks", response_model=schemas.Task)
 def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
-    db_task = models.Task(**task.dict())
+    task_data = task.dict()
+    # Auto-assign position to end of list for this priority level
+    max_pos = db.query(func.max(models.Task.position)).filter(
+        models.Task.priority == task_data.get('priority', 1),
+        models.Task.parent_id == task_data.get('parent_id')
+    ).scalar()
+    task_data['position'] = (max_pos or 0) + 1
+
+    db_task = models.Task(**task_data)
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -73,10 +81,13 @@ def update_task(task_id: int, task: schemas.TaskCreate, db: Session = Depends(ge
     db_task = db.query(models.Task).filter(models.Task.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
-    
-    for var, value in task.dict().items():
+
+    for var, value in task.dict(exclude_unset=True).items():
+        # Preserve existing position if not explicitly set
+        if var == 'position' and value is None:
+            continue
         setattr(db_task, var, value)
-    
+
     db.commit()
     db.refresh(db_task)
     return db_task

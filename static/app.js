@@ -8,6 +8,13 @@ function sharpei() {
         newTaskTitle: '',
         expandedTasks: [],
         searchQuery: '',
+        loading: false,
+        error: null,
+
+        showError(message) {
+            this.error = message;
+            setTimeout(() => this.error = null, 4000);
+        },
 
         init() {
             this.fetchCategories().then(() => {
@@ -42,15 +49,17 @@ function sharpei() {
             if (this.searchQuery) {
                 url += `q=${encodeURIComponent(this.searchQuery)}`;
             }
+            this.loading = true;
             fetch(url)
                 .then(res => {
-                    if (!res.ok) throw new Error('Fetch failed');
+                    if (!res.ok) throw new Error('Failed to load tasks');
                     return res.json();
                 })
                 .then(data => {
                     this.tasks = data.map(t => this.transformTask(t));
                 })
-                .catch(err => console.error(err));
+                .catch(err => this.showError(err.message))
+                .finally(() => this.loading = false);
         },
 
         searchTasks() {
@@ -87,7 +96,7 @@ function sharpei() {
                         body: JSON.stringify({ task_ids: taskIds })
                     })
                     .then(res => {
-                        if (!res.ok) throw new Error('Reorder failed');
+                        if (!res.ok) throw new Error('Failed to reorder tasks');
                         // 2. If the group changed, update the priority of the moved task
                         if (fromList !== toList) {
                             const task = this.tasks.find(t => t.id == taskId);
@@ -99,7 +108,7 @@ function sharpei() {
                             this.fetchTasks();
                         }
                     })
-                    .catch(err => console.error(err));
+                    .catch(err => this.showError(err.message));
                 }
             });
         },
@@ -123,18 +132,18 @@ function sharpei() {
                 body: JSON.stringify({ name: this.newCategoryName })
             })
             .then(res => {
-                if (!res.ok) throw new Error('Add category failed');
+                if (!res.ok) throw new Error('Failed to add category');
                 this.newCategoryName = '';
                 this.fetchCategories();
             })
-            .catch(err => console.error(err));
+            .catch(err => this.showError(err.message));
         },
 
         deleteCategory(id) {
             if (!confirm('Delete this category? Tasks will be moved to "No Category".')) return;
             fetch(`/api/categories/${id}`, { method: 'DELETE' })
                 .then(res => {
-                    if (!res.ok) throw new Error('Delete category failed');
+                    if (!res.ok) throw new Error('Failed to delete category');
                     if (this.selectedCategory === id) {
                         this.selectedCategory = null;
                         this.selectedCategoryName = 'All Tasks';
@@ -142,7 +151,7 @@ function sharpei() {
                     this.fetchCategories();
                     this.fetchTasks();
                 })
-                .catch(err => console.error(err));
+                .catch(err => this.showError(err.message));
         },
 
         addTask() {
@@ -150,8 +159,7 @@ function sharpei() {
             const data = {
                 title: this.newTaskTitle,
                 category_id: this.selectedCategory,
-                priority: 1, // Default to Normal
-                position: 0
+                priority: 1 // Default to Normal; position assigned by backend
             };
             fetch('/api/tasks', {
                 method: 'POST',
@@ -159,11 +167,11 @@ function sharpei() {
                 body: JSON.stringify(data)
             })
             .then(res => {
-                if (!res.ok) throw new Error('Add task failed');
+                if (!res.ok) throw new Error('Failed to add task');
                 this.newTaskTitle = '';
                 this.fetchTasks();
             })
-            .catch(err => console.error(err));
+            .catch(err => this.showError(err.message));
         },
 
         addSubtask(parentTask) {
@@ -179,11 +187,11 @@ function sharpei() {
                 })
             })
             .then(res => {
-                if (!res.ok) throw new Error('Add subtask failed');
+                if (!res.ok) throw new Error('Failed to add subtask');
                 parentTask.newSubtaskTitle = '';
                 this.fetchTasks();
             })
-            .catch(err => console.error(err));
+            .catch(err => this.showError(err.message));
         },
 
         toggleTask(task) {
@@ -195,7 +203,7 @@ function sharpei() {
             const data = {
                 title: task.title,
                 description: task.description,
-                due_date: task.due_date_str ? new Date(task.due_date_str).toISOString() : null,
+                due_date: task.due_date_str ? new Date(task.due_date_str + 'T12:00:00').toISOString() : null,
                 priority: parseInt(task.priority),
                 position: task.position || 0,
                 hashtags: task.hashtags,
@@ -210,16 +218,20 @@ function sharpei() {
                 body: JSON.stringify(data)
             })
             .then(res => {
-                if (!res.ok) throw new Error('Save task failed');
+                if (!res.ok) throw new Error('Failed to save task');
                 this.fetchTasks();
             })
-            .catch(err => console.error(err));
+            .catch(err => this.showError(err.message));
         },
 
         deleteTask(id) {
             if (confirm('Delete this task?')) {
                 fetch(`/api/tasks/${id}`, { method: 'DELETE' })
-                    .then(() => this.fetchTasks());
+                    .then(res => {
+                        if (!res.ok) throw new Error('Failed to delete task');
+                        this.fetchTasks();
+                    })
+                    .catch(err => this.showError(err.message));
             }
         },
 
