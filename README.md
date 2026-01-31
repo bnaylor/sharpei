@@ -2,7 +2,7 @@
 
 A focused, local-first TODO application inspired by [MyTinyTodo](https://www.mytinytodo.net/).
 
-Sharpei runs entirely on your machine with no cloud dependencies, stores data in SQLite for easy AI/agent access, and provides a clean, responsive UI for managing tasks.
+Sharpei runs entirely on your machine with no cloud dependencies, stores data in SQLite for easy AI/agent access, and provides a clean, responsive UI for managing tasks, and an MCP server for direct AI agent manipulation.
 
 ## Features
 
@@ -124,4 +124,4 @@ Built with assistance from [Gemini 3](https://deepmind.google/technologies/gemin
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+Apache 2.0 License - see [LICENSE](LICENSE) for details.
