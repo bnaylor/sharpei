@@ -190,6 +190,28 @@ class TestSubtasks:
 class TestFiltering:
     """Test task filtering and search."""
 
+    def test_filter_by_priority(self, mcp_server):
+        """Test filtering tasks by priority."""
+        mcp_server.create_task("High", priority=0)
+        mcp_server.create_task("Normal", priority=1)
+        mcp_server.create_task("Low", priority=2)
+
+        result = json.loads(mcp_server.list_tasks(priority=0))
+
+        assert len(result) == 1
+        assert result[0]["title"] == "High"
+
+    def test_filter_by_category_id_zero(self, mcp_server):
+        """Test that category_id=0 works correctly (regression test).
+
+        This tests the fix for `if category_id:` treating 0 as falsy.
+        """
+        mcp_server.create_task("Uncategorized task")
+
+        # category_id=0 doesn't exist, so should return empty
+        result = json.loads(mcp_server.list_tasks(category_id=0))
+        assert result == []
+
     def test_filter_by_category(self, mcp_server):
         """Test filtering tasks by category."""
         cat1 = json.loads(mcp_server.create_category("Work"))
