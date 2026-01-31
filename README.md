@@ -116,7 +116,6 @@ See [doc/testing.md](doc/testing.md) for testing documentation.
 - [Quick-Add Syntax](doc/quick-add.md)
 - [MCP Server](doc/mcp.md)
 - [Testing](doc/testing.md)
-- [Requirements](doc/Requirements.txt)
 
 ## Credits
 
