@@ -11,6 +11,7 @@ function sharpei() {
         loading: false,
         error: null,
         showArchived: false,
+        showDetails: false,
 
         showError(message) {
             this.error = message;
@@ -36,6 +37,11 @@ function sharpei() {
                 if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'H') {
                     e.preventDefault();
                     this.toggleShowArchived();
+                }
+                // Ctrl/Cmd + Shift + D: Toggle show details
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+                    e.preventDefault();
+                    this.toggleShowDetails();
                 }
             });
         },
@@ -280,6 +286,10 @@ function sharpei() {
         toggleShowArchived() {
             this.showArchived = !this.showArchived;
             this.fetchTasks();
+        },
+
+        toggleShowDetails() {
+            this.showDetails = !this.showDetails;
         },
 
         toggleExpand(task) {

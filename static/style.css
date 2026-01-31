@@ -131,4 +131,19 @@ body {
     background-color: #f8f9fa;
 }
 
+.task-compact-details {
+    border-bottom: 1px solid #dee2e6;
+    border-left: 4px solid #e9ecef;
+}
+
+.task-compact-details .markdown-preview {
+    color: #495057;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.task-compact-details .markdown-preview p:last-child {
+    margin-bottom: 0;
+}
+
 [x-cloak] { display: none !important; }

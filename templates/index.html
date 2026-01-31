@@ -88,6 +88,10 @@
                         <i class="bi bi-eye-slash" x-show="showArchived"></i>
                         <span x-text="showArchived ? 'Hiding Archived' : 'Show Archived'"></span>
                     </button>
+                    <button class="btn btn-sm" :class="showDetails ? 'btn-secondary' : 'btn-outline-secondary'" @click="toggleShowDetails()" title="Show details for all tasks (Ctrl+Shift+D)">
+                        <i class="bi bi-card-text"></i>
+                        <span x-text="showDetails ? 'Hide Details' : 'Show Details'"></span>
+                    </button>
                 </div>
 
                 <!-- Loading Spinner -->
@@ -126,7 +130,21 @@
                                                 <button class="btn btn-sm btn-link text-danger p-0 ms-2" @click.stop="deleteTask(task.id)"><i class="bi bi-trash"></i></button>
                                             </div>
                                         </div>
-                                        
+
+                                        <!-- Compact Details View (when Show Details is on) -->
+                                        <div class="task-compact-details px-3 py-2 border-start border-end bg-white"
+                                             x-show="showDetails && !expandedTasks.includes(task.id) && (task.description || task.subtasks.length)">
+                                            <div class="markdown-preview small mb-2" x-show="task.description" x-html="DOMPurify.sanitize(marked.parse(task.description || ''))"></div>
+                                            <div class="subtasks-preview" x-show="task.subtasks.length">
+                                                <template x-for="sub in task.subtasks" :key="sub.id">
+                                                    <div class="d-flex align-items-center mb-1">
+                                                        <input class="form-check-input me-2" type="checkbox" :checked="sub.completed" @change="toggleTask(sub)">
+                                                        <span class="small" :class="sub.completed ? 'text-decoration-line-through text-muted' : ''" x-text="sub.title"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+
                                         <!-- Expanded Task Details -->
                                         <div class="task-details p-3 bg-light border-start border-end" x-show="expandedTasks.includes(task.id)">
                                             <div class="row mb-3">
