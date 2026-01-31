@@ -7,6 +7,11 @@ via the Model Context Protocol (MCP).
 Run with: python mcp_server.py
 Or configure in your AI assistant's MCP settings.
 """
+# Configure logging FIRST to ensure nothing pollutes stdout (used by MCP stdio protocol)
+import logging
+import sys
+logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
+
 import json
 from datetime import datetime
 from typing import Optional
@@ -18,12 +23,16 @@ from sqlalchemy.orm import sessionmaker
 from app.models import Base, Category, Task
 
 # Database setup - use the same database as the main app
-SQLALCHEMY_DATABASE_URL = "sqlite:///./sharpei.db"
+# Use absolute path to ensure it works regardless of working directory
+import os
+_db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sharpei.db")
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{_db_path}"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create MCP server
-mcp = FastMCP("Sharpei TODO")
+# Use WARNING log level to prevent debug output from corrupting stdio protocol
+mcp = FastMCP("Sharpei TODO", log_level="WARNING")
 
 
 def get_db():
@@ -101,7 +110,8 @@ def list_tasks(
     category_id: Optional[int] = None,
     search: Optional[str] = None,
     include_archived: bool = False,
-    include_subtasks: bool = True
+    include_subtasks: bool = True,
+    priority: Optional[int] = None
 ) -> str:
     """List tasks with optional filtering.
 
@@ -110,6 +120,7 @@ def list_tasks(
         search: Search term to filter by title, description, or hashtags (optional)
         include_archived: Whether to include archived tasks (default: False)
         include_subtasks: Whether to include subtask details (default: True)
+        priority: Filter by priority (0=High, 1=Normal, 2=Low) (optional)
 
     Returns:
         A list of tasks matching the criteria
@@ -132,8 +143,11 @@ def list_tasks(
         if not include_archived:
             query = query.filter(Task.archived == False)
 
-        if category_id:
+        if category_id is not None:
             query = query.filter(Task.category_id == category_id)
+
+        if priority is not None:
+            query = query.filter(Task.priority == priority)
 
         tasks = query.order_by(Task.priority.asc(), Task.position.asc(), Task.id.desc()).all()
 
@@ -359,7 +373,7 @@ def archive_completed(category_id: Optional[int] = None) -> str:
             Task.completed == True,
             Task.archived == False
         )
-        if category_id:
+        if category_id is not None:
             query = query.filter(Task.category_id == category_id)
 
         count = query.update({"archived": True})

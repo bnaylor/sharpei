@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sharpei": {
+      "command": "/Users/bnaylor/src/sharpei/venv/bin/python",
+      "args": ["/Users/bnaylor/src/sharpei/mcp_server.py"]
+    }
+  }
+}
