@@ -21,6 +21,18 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     pass
 
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    due_date: Optional[datetime] = None
+    priority: Optional[int] = None
+    position: Optional[int] = None
+    hashtags: Optional[str] = None
+    completed: Optional[bool] = None
+    archived: Optional[bool] = None
+    category_id: Optional[int] = None
+    parent_id: Optional[int] = None
+
 class Task(TaskBase):
     id: int
     

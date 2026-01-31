@@ -57,7 +57,7 @@ def mcp_server(test_db, monkeypatch):
     import mcp_server as mcp_module
 
     # Monkeypatch the database connection
-    monkeypatch.setattr(mcp_module, 'engine', test_db['engine'])
+    # Note: mcp_server imports SessionLocal from app.database, so we patch it in the module
     monkeypatch.setattr(mcp_module, 'SessionLocal', test_db['SessionLocal'])
 
     return mcp_module

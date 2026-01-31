@@ -17,18 +17,10 @@ from datetime import datetime
 from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
-from sqlalchemy import create_engine, func, or_
-from sqlalchemy.orm import sessionmaker
 
-from app.models import Base, Category, Task
-
-# Database setup - use the same database as the main app
-# Use absolute path to ensure it works regardless of working directory
-import os
-_db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sharpei.db")
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{_db_path}"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from app.models import Task, Category
+from app.database import SessionLocal
+from app import crud, schemas
 
 # Create MCP server
 # Use WARNING log level to prevent debug output from corrupting stdio protocol
@@ -41,7 +33,7 @@ def get_db():
     try:
         return db
     finally:
-        pass  # Caller is responsible for closing
+        pass  # Caller is responsible for closing, or we could use context manager if we refactor more
 
 
 def task_to_dict(task: Task) -> dict:
@@ -78,7 +70,7 @@ def list_categories() -> str:
     """
     db = get_db()
     try:
-        categories = db.query(Category).all()
+        categories = crud.get_categories(db)
         return json.dumps([category_to_dict(c) for c in categories], indent=2)
     finally:
         db.close()
@@ -96,10 +88,7 @@ def create_category(name: str) -> str:
     """
     db = get_db()
     try:
-        category = Category(name=name)
-        db.add(category)
-        db.commit()
-        db.refresh(category)
+        category = crud.create_category(db, schemas.CategoryCreate(name=name))
         return json.dumps(category_to_dict(category), indent=2)
     finally:
         db.close()
@@ -127,29 +116,19 @@ def list_tasks(
     """
     db = get_db()
     try:
-        query = db.query(Task)
-
-        if search:
-            search_filter = or_(
-                Task.title.ilike(f"%{search}%"),
-                Task.description.ilike(f"%{search}%"),
-                Task.hashtags.ilike(f"%{search}%")
-            )
-            query = query.filter(search_filter)
-        else:
-            # Only top-level tasks if not searching
-            query = query.filter(Task.parent_id == None)
-
-        if not include_archived:
-            query = query.filter(Task.archived == False)
-
-        if category_id is not None:
-            query = query.filter(Task.category_id == category_id)
-
-        if priority is not None:
-            query = query.filter(Task.priority == priority)
-
-        tasks = query.order_by(Task.priority.asc(), Task.position.asc(), Task.id.desc()).all()
+        # Note: crud.get_tasks handles search, category_id, priority, and archived filtering
+        # The logic in crud.get_tasks matches the previous logic here:
+        # - if search is provided, it searches everything (including subtasks logic implicitly via flattened result if designed so, but wait...)
+        # In original mcp_server.py: "Only top-level tasks if not searching".
+        # In crud.get_tasks: Same logic.
+        
+        tasks = crud.get_tasks(
+            db, 
+            category_id=category_id, 
+            search=search, 
+            show_archived=include_archived, 
+            priority=priority
+        )
 
         result = []
         for task in tasks:
@@ -175,7 +154,7 @@ def get_task(task_id: int) -> str:
     """
     db = get_db()
     try:
-        task = db.query(Task).filter(Task.id == task_id).first()
+        task = crud.get_task(db, task_id)
         if not task:
             return json.dumps({"error": f"Task with ID {task_id} not found"})
         return json.dumps(task_to_dict(task), indent=2)
@@ -218,28 +197,17 @@ def create_task(
                 # Try parsing as date only
                 parsed_due_date = datetime.strptime(due_date, "%Y-%m-%d")
 
-        # Calculate position
-        max_pos = db.query(func.max(Task.position)).filter(
-            Task.priority == priority,
-            Task.parent_id == parent_id
-        ).scalar()
-        position = (max_pos or 0) + 1
-
-        task = Task(
+        task_create = schemas.TaskCreate(
             title=title,
             description=description,
             due_date=parsed_due_date,
             priority=priority,
-            position=position,
             hashtags=hashtags,
             category_id=category_id,
-            parent_id=parent_id,
-            completed=False,
-            archived=False
+            parent_id=parent_id
         )
-        db.add(task)
-        db.commit()
-        db.refresh(task)
+
+        task = crud.create_task(db, task_create)
         return json.dumps(task_to_dict(task), indent=2)
     finally:
         db.close()
@@ -277,38 +245,46 @@ def update_task(
     """
     db = get_db()
     try:
-        task = db.query(Task).filter(Task.id == task_id).first()
-        if not task:
-            return json.dumps({"error": f"Task with ID {task_id} not found"})
-
+        # Construct update dict
+        update_data = {}
         if title is not None:
-            task.title = title
+            update_data['title'] = title
         if description is not None:
-            task.description = description
+            update_data['description'] = description
         if due_date is not None:
             if due_date == "":
-                task.due_date = None
+                update_data['due_date'] = None
             else:
                 try:
-                    task.due_date = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
+                    update_data['due_date'] = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
                 except ValueError:
-                    task.due_date = datetime.strptime(due_date, "%Y-%m-%d")
+                    update_data['due_date'] = datetime.strptime(due_date, "%Y-%m-%d")
         if priority is not None:
-            task.priority = priority
+            update_data['priority'] = priority
         if hashtags is not None:
-            task.hashtags = hashtags
+            update_data['hashtags'] = hashtags
         if category_id is not None:
-            task.category_id = None if category_id == -1 else category_id
+            update_data['category_id'] = None if category_id == -1 else category_id
         if completed is not None:
-            task.completed = completed
-            # If uncompleting, also unarchive
+            update_data['completed'] = completed
+            # If uncompleting, also unarchive (logic from original mcp_server)
             if not completed:
-                task.archived = False
+                update_data['archived'] = False
         if archived is not None:
-            task.archived = archived
+            update_data['archived'] = archived
 
-        db.commit()
-        db.refresh(task)
+        if not update_data:
+             # No updates
+             task = crud.get_task(db, task_id)
+             if not task:
+                return json.dumps({"error": f"Task with ID {task_id} not found"})
+             return json.dumps(task_to_dict(task), indent=2)
+
+        # Use the flexible dict support in crud.update_task
+        task = crud.update_task(db, task_id, update_data)
+        if not task:
+            return json.dumps({"error": f"Task with ID {task_id} not found"})
+            
         return json.dumps(task_to_dict(task), indent=2)
     finally:
         db.close()
@@ -343,13 +319,13 @@ def delete_task(task_id: int) -> str:
     """
     db = get_db()
     try:
-        task = db.query(Task).filter(Task.id == task_id).first()
+        # get task first to get title for message
+        task = crud.get_task(db, task_id)
         if not task:
             return json.dumps({"error": f"Task with ID {task_id} not found"})
-
+        
         title = task.title
-        db.delete(task)
-        db.commit()
+        crud.delete_task(db, task_id)
         return json.dumps({"message": f"Deleted task: {title}"})
     finally:
         db.close()
@@ -369,15 +345,7 @@ def archive_completed(category_id: Optional[int] = None) -> str:
     """
     db = get_db()
     try:
-        query = db.query(Task).filter(
-            Task.completed == True,
-            Task.archived == False
-        )
-        if category_id is not None:
-            query = query.filter(Task.category_id == category_id)
-
-        count = query.update({"archived": True})
-        db.commit()
+        count = crud.archive_completed_tasks(db, category_id=category_id)
         return json.dumps({"message": f"Archived {count} completed tasks"})
     finally:
         db.close()
@@ -399,17 +367,18 @@ def add_subtask(parent_id: int, title: str, description: Optional[str] = None) -
     """
     db = get_db()
     try:
-        parent = db.query(Task).filter(Task.id == parent_id).first()
+        parent = crud.get_task(db, parent_id)
         if not parent:
             return json.dumps({"error": f"Parent task with ID {parent_id} not found"})
 
-        return create_task(
+        task = crud.create_task(db, schemas.TaskCreate(
             title=title,
             description=description,
             priority=parent.priority,
             category_id=parent.category_id,
             parent_id=parent_id
-        )
+        ))
+        return json.dumps(task_to_dict(task), indent=2)
     finally:
         db.close()
 
