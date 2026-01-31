@@ -244,9 +244,35 @@ function sharpei() {
         },
 
         formatDate(dateStr) {
-            if (!dateStr) return '';
+            if (!dateStr) return { text: '', status: '' };
+
             const d = new Date(dateStr);
-            return d.toLocaleDateString();
+            const now = new Date();
+
+            // Normalize to start of day for comparison
+            const dueDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            const diffDays = Math.round((dueDate - today) / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) {
+                // Overdue
+                const absDays = Math.abs(diffDays);
+                let timeStr;
+                if (absDays >= 7) {
+                    const weeks = Math.floor(absDays / 7);
+                    timeStr = weeks + 'w';
+                } else {
+                    timeStr = absDays + 'd';
+                }
+                return { text: `Overdue: ${timeStr}`, status: 'overdue' };
+            } else if (diffDays === 0) {
+                return { text: 'Today', status: 'urgent' };
+            } else if (diffDays === 1) {
+                return { text: 'Tomorrow', status: 'urgent' };
+            } else {
+                return { text: d.toLocaleDateString(), status: '' };
+            }
         }
     }
 }

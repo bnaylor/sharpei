@@ -101,12 +101,16 @@
                                             <span class="flex-grow-1 task-title" :class="task.completed ? 'text-decoration-line-through' : ''" x-text="task.title" @click="toggleExpand(task)"></span>
                                             <div class="task-meta d-flex align-items-center">
                                                 <template x-for="tag in task.tags_array">
-                                                    <span class="badge bg-light text-primary border me-1 cursor-pointer" 
-                                                          x-text="tag" 
-                                                          @click.stop="filterByTag(tag)" 
+                                                    <span class="badge bg-light text-primary border me-1 cursor-pointer"
+                                                          x-text="tag"
+                                                          @click.stop="filterByTag(tag)"
                                                           title="Filter by tag"></span>
                                                 </template>
-                                                <span class="text-muted small me-2" x-show="task.due_date" x-text="formatDate(task.due_date)"></span>
+                                                <span class="due-date-separator" x-show="task.tags_array.length && task.due_date"></span>
+                                                <span class="due-date small me-2"
+                                                      x-show="task.due_date"
+                                                      :class="formatDate(task.due_date).status"
+                                                      x-text="formatDate(task.due_date).text"></span>
                                                 <button class="btn btn-sm btn-link text-danger p-0 ms-2" @click.stop="deleteTask(task.id)"><i class="bi bi-trash"></i></button>
                                             </div>
                                         </div>

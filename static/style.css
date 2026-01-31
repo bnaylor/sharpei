@@ -103,4 +103,27 @@ body {
     cursor: pointer;
 }
 
+.due-date-separator {
+    display: inline-block;
+    width: 1px;
+    height: 16px;
+    background-color: #dee2e6;
+    margin: 0 8px;
+    vertical-align: middle;
+}
+
+.due-date {
+    color: #6c757d;
+}
+
+.due-date.urgent {
+    color: #fbbc05;
+    font-weight: 600;
+}
+
+.due-date.overdue {
+    color: #ea4335;
+    font-weight: 600;
+}
+
 [x-cloak] { display: none !important; }
