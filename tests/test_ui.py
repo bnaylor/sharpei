@@ -427,5 +427,134 @@ class TestHashtags:
         expect(ui_page.locator(".task-list")).not_to_contain_text("Personal task")
 
 
+class TestQuickAdd:
+    """Test quick-add syntax parsing."""
+
+    def test_quick_add_with_priority_high(self, ui_page):
+        """Test quick-add with high priority."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Urgent task !high")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Urgent task')")
+
+        # Verify task is in high priority section
+        high_priority_section = ui_page.locator("#list-p0")
+        expect(high_priority_section).to_contain_text("Urgent task")
+
+    def test_quick_add_with_priority_low(self, ui_page):
+        """Test quick-add with low priority."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Someday task !low")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Someday task')")
+
+        # Verify task is in low priority section
+        low_priority_section = ui_page.locator("#list-p2")
+        expect(low_priority_section).to_contain_text("Someday task")
+
+    def test_quick_add_with_hashtags(self, ui_page):
+        """Test quick-add with hashtags."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Tagged task #work #urgent")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Tagged task')")
+        ui_page.wait_for_timeout(300)
+
+        # Verify tags appear
+        task_item = ui_page.locator(".task-item:has-text('Tagged task')")
+        expect(task_item).to_contain_text("#work")
+        expect(task_item).to_contain_text("#urgent")
+
+    def test_quick_add_with_due_date_tomorrow(self, ui_page):
+        """Test quick-add with @tomorrow."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Due soon @tomorrow")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Due soon')")
+        ui_page.wait_for_timeout(300)
+
+        # Verify due date shows "Tomorrow"
+        task_item = ui_page.locator(".task-item:has-text('Due soon')")
+        expect(task_item).to_contain_text("Tomorrow")
+
+    def test_quick_add_with_due_date_today(self, ui_page):
+        """Test quick-add with @today."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Do now @today")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Do now')")
+        ui_page.wait_for_timeout(300)
+
+        # Verify due date shows "Today"
+        task_item = ui_page.locator(".task-item:has-text('Do now')")
+        expect(task_item).to_contain_text("Today")
+
+    def test_quick_add_with_category(self, ui_page):
+        """Test quick-add with category override."""
+        # Create a category first
+        cat_input = ui_page.locator("#sidebar input[placeholder='New category']")
+        cat_input.fill("Work")
+        cat_input.press("Enter")
+        ui_page.wait_for_selector("#sidebar a:has-text('Work')")
+
+        # Add task with category override (while "All Tasks" is selected)
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Work stuff >Work")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Work stuff')")
+
+        # Switch to Work category and verify task is there
+        ui_page.locator("#sidebar a:has-text('Work')").click()
+        ui_page.wait_for_timeout(500)
+
+        expect(ui_page.locator(".task-list")).to_contain_text("Work stuff")
+
+    def test_quick_add_combined(self, ui_page):
+        """Test quick-add with multiple elements."""
+        # Create category
+        cat_input = ui_page.locator("#sidebar input[placeholder='New category']")
+        cat_input.fill("Projects")
+        cat_input.press("Enter")
+        ui_page.wait_for_selector("#sidebar a:has-text('Projects')")
+
+        # Add task with everything
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Big project !high #important #q1 @tomorrow >Projects")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Big project')")
+        ui_page.wait_for_timeout(300)
+
+        # Verify it's in high priority
+        high_priority_section = ui_page.locator("#list-p0")
+        expect(high_priority_section).to_contain_text("Big project")
+
+        # Verify tags
+        task_item = ui_page.locator(".task-item:has-text('Big project')")
+        expect(task_item).to_contain_text("#important")
+        expect(task_item).to_contain_text("#q1")
+
+        # Verify due date
+        expect(task_item).to_contain_text("Tomorrow")
+
+    def test_quick_add_title_only(self, ui_page):
+        """Test that plain text still works."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Simple task with no special syntax")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Simple task with no special syntax')")
+
+        # Should be in Normal priority
+        normal_section = ui_page.locator("#list-p1")
+        expect(normal_section).to_contain_text("Simple task with no special syntax")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
