@@ -111,7 +111,7 @@
                                     <div class="task-item-container" :data-id="task.id">
                                         <div class="task-item d-flex align-items-center p-2 border-bottom"
                                              :class="{'text-muted': task.completed, 'archived': task.archived}"
-                                             :style="task.priority == 0 ? 'border-left: 4px solid #dc3545' : (task.priority == 2 ? 'border-left: 4px solid #0d6efd' : 'border-left: 4px solid transparent')">
+                                             :style="task.priority == 0 ? 'border-left: 4px solid #ea4335' : (task.priority == 2 ? 'border-left: 4px solid #4285f4' : 'border-left: 4px solid #34a853')">
                                             <i class="bi bi-grip-vertical text-muted me-1 drag-handle"></i>
                                             <input class="form-check-input me-2" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)">
                                             <span class="flex-grow-1 task-title" :class="task.completed ? 'text-decoration-line-through' : ''" x-text="task.title" @click="toggleExpand(task)"></span>
