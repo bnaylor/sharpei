@@ -2,8 +2,31 @@ body {
     font-size: 0.9rem;
 }
 
+.app-banner {
+    background: linear-gradient(135deg, #4285f4 0%, #34a853 50%, #fbbc05 100%);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.app-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.app-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
 .sidebar {
-    height: 100vh;
+    height: calc(100vh - 60px);
     border-right: 1px solid #dee2e6;
 }
 

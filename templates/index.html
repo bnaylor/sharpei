@@ -13,6 +13,12 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body x-data="sharpei()">
+    <!-- App Banner -->
+    <header class="app-banner">
+        <img src="/assets/icon_large.jpg" alt="Sharpei" class="app-icon">
+        <span class="app-title">Sharpei</span>
+    </header>
+
     <!-- Error Toast -->
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
         <div class="toast align-items-center text-bg-danger border-0" :class="error ? 'show' : ''" role="alert">
