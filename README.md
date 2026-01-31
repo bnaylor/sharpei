@@ -10,6 +10,7 @@ Sharpei runs entirely on your machine with no cloud dependencies, stores data in
 - **SQLite storage** - Simple, portable database that AI tools can read
 - **Categories** - Organize tasks into projects or areas
 - **Priority levels** - High (red), Normal (green), Low (blue)
+- **Markdown notes** - Capture details about your tasks in markdown syntax
 - **Subtasks** - Break down tasks into smaller items
 - **Hashtags** - Tag tasks for easy filtering
 - **Due dates** - With smart display (Today, Tomorrow, Overdue)
