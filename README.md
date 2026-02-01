@@ -4,6 +4,8 @@ A focused, local-first TODO application inspired by [MyTinyTodo](https://www.myt
 
 Sharpei runs entirely on your machine with no cloud dependencies, stores data in SQLite for easy AI/agent access, and provides a clean, responsive UI for managing tasks, and an MCP server for direct AI agent manipulation.
 
+![Sharpei screenshot](assets/sharpei_screenshot.png)
+
 ## Features
 
 - **Local-first** - Runs on localhost, no internet required
