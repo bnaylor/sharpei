@@ -4,3 +4,4 @@ __pycache__/
 sharpei.db
 .DS_Store
 .mcp.json
+.claude/
