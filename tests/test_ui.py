@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """UI tests for Sharpei using Playwright."""
 import re
+from datetime import datetime, timedelta
 
 import pytest
 from playwright.sync_api import expect
@@ -554,6 +555,43 @@ class TestQuickAdd:
         # Should be in Normal priority
         normal_section = ui_page.locator("#list-p1")
         expect(normal_section).to_contain_text("Simple task with no special syntax")
+
+
+class TestBugFixes:
+    """Tests for specific bug fixes."""
+
+    def test_completed_task_not_marked_overdue(self, ui_page):
+        """Test that a completed task doesn't show 'Overdue'."""
+        # Create a task with a past due date
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill(f"Overdue task @{yesterday}")
+        input_field.press("Enter")
+
+        ui_page.wait_for_selector(".task-title:has-text('Overdue task')")
+        ui_page.wait_for_timeout(300)
+
+        # Verify it shows "Overdue"
+        task_item = ui_page.locator(".task-item:has-text('Overdue task')")
+        expect(task_item.locator(".due-date")).to_contain_text("Overdue")
+        expect(task_item.locator(".due-date")).to_have_class(re.compile(r"overdue"))
+
+        # Complete the task
+        checkbox = task_item.locator("input[type='checkbox']")
+        checkbox.click()
+        ui_page.wait_for_timeout(300)
+
+        # Verify it NO LONGER shows "Overdue" but shows the date or something else
+        # and doesn't have the "overdue" class
+        expect(task_item.locator(".due-date")).not_to_contain_text("Overdue")
+        expect(task_item.locator(".due-date")).not_to_have_class(re.compile(r"overdue"))
+
+    def test_doc_link_exists(self, ui_page):
+        """Test that the documentation link is present in the banner."""
+        doc_link = ui_page.locator(".app-banner a:has-text('Documentation')")
+        expect(doc_link).to_be_visible()
+        expect(doc_link).to_have_attribute("href", "https://github.com/bnaylor/sharpei")
 
 
 if __name__ == "__main__":

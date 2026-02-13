@@ -430,7 +430,7 @@ function sharpei() {
             }
         },
 
-        formatDate(dateStr) {
+        formatDate(dateStr, isCompleted = false) {
             if (!dateStr) return { text: '', status: '' };
 
             const d = new Date(dateStr);
@@ -443,6 +443,9 @@ function sharpei() {
             const diffDays = Math.round((dueDate - today) / (1000 * 60 * 60 * 24));
 
             if (diffDays < 0) {
+                if (isCompleted) {
+                    return { text: d.toLocaleDateString(), status: '' };
+                }
                 // Overdue
                 const absDays = Math.abs(diffDays);
                 let timeStr;
@@ -454,9 +457,9 @@ function sharpei() {
                 }
                 return { text: `Overdue: ${timeStr}`, status: 'overdue' };
             } else if (diffDays === 0) {
-                return { text: 'Today', status: 'urgent' };
+                return { text: 'Today', status: isCompleted ? '' : 'urgent' };
             } else if (diffDays === 1) {
-                return { text: 'Tomorrow', status: 'urgent' };
+                return { text: 'Tomorrow', status: isCompleted ? '' : 'urgent' };
             } else {
                 return { text: d.toLocaleDateString(), status: '' };
             }

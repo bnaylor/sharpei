@@ -14,9 +14,14 @@
 </head>
 <body x-data="sharpei()">
     <!-- App Banner -->
-    <header class="app-banner">
-        <img src="/assets/icon_large.jpg" alt="Sharpei" class="app-icon">
-        <span class="app-title">Sharpei</span>
+    <header class="app-banner d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <img src="/assets/icon_large.jpg" alt="Sharpei" class="app-icon">
+            <span class="app-title">Sharpei</span>
+        </div>
+        <a href="https://github.com/bnaylor/sharpei" target="_blank" class="text-white text-decoration-none small">
+            <i class="bi bi-book me-1"></i> Documentation
+        </a>
     </header>
 
     <!-- Error Toast -->
@@ -125,8 +130,8 @@
                                                 <span class="due-date-separator" x-show="task.tags_array.length && task.due_date"></span>
                                                 <span class="due-date small me-2"
                                                       x-show="task.due_date"
-                                                      :class="formatDate(task.due_date).status"
-                                                      x-text="formatDate(task.due_date).text"></span>
+                                                      :class="formatDate(task.due_date, task.completed).status"
+                                                      x-text="formatDate(task.due_date, task.completed).text"></span>
                                                 <button class="btn btn-sm btn-link text-danger p-0 ms-2" @click.stop="deleteTask(task.id)"><i class="bi bi-trash"></i></button>
                                             </div>
                                         </div>
