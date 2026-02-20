@@ -452,11 +452,13 @@ function sharpei() {
         isDirty(task) {
             const snap = this.taskSnapshots[task.id];
             if (!snap) return false;
-            return snap.description !== task.description
+            // Normalize null and empty string as equivalent for string fields
+            const norm = v => (v == null ? '' : String(v));
+            return norm(snap.description) !== norm(task.description)
                 || snap.due_date_str !== task.due_date_str
                 || snap.priority !== task.priority
                 || snap.category_id !== task.category_id
-                || snap.hashtags !== task.hashtags;
+                || norm(snap.hashtags) !== norm(task.hashtags);
         },
 
         formatDate(dateStr, isCompleted = false) {

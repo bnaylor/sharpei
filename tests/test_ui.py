@@ -237,6 +237,75 @@ class TestTaskExpansion:
         expect(save_btn).to_be_enabled()
         expect(save_btn).to_have_class(re.compile(r"btn-success"))
 
+    def test_save_button_disabled_after_save(self, ui_page):
+        """Test that Save button goes back to disabled after a successful save."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Dirty tracking task C")
+        input_field.press("Enter")
+        ui_page.wait_for_selector(".task-title:has-text('Dirty tracking task C')")
+
+        ui_page.locator(".task-title:has-text('Dirty tracking task C')").click()
+        ui_page.wait_for_selector(".task-details")
+
+        textarea = ui_page.locator(".task-details textarea")
+        textarea.fill("Description to save")
+
+        save_btn = ui_page.locator(".task-details button:has-text('Save')")
+        save_btn.click()
+        ui_page.wait_for_timeout(500)
+
+        expect(save_btn).to_be_disabled()
+        expect(save_btn).to_have_class(re.compile(r"btn-secondary"))
+
+    def test_save_button_disabled_after_collapse_reexpand(self, ui_page):
+        """Test that Save button is disabled after collapsing and re-expanding an unsaved task."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Dirty tracking task D")
+        input_field.press("Enter")
+        ui_page.wait_for_selector(".task-title:has-text('Dirty tracking task D')")
+
+        # Expand
+        ui_page.locator(".task-title:has-text('Dirty tracking task D')").click()
+        ui_page.wait_for_selector(".task-details")
+
+        # Make a change (but don't save)
+        textarea = ui_page.locator(".task-details textarea")
+        textarea.fill("Unsaved change")
+
+        # Collapse
+        ui_page.locator(".task-title:has-text('Dirty tracking task D')").click()
+        ui_page.wait_for_selector(".task-details", state="hidden")
+
+        # Re-expand
+        ui_page.locator(".task-title:has-text('Dirty tracking task D')").click()
+        ui_page.wait_for_selector(".task-details")
+
+        save_btn = ui_page.locator(".task-details button:has-text('Save')")
+        expect(save_btn).to_be_disabled()
+        expect(save_btn).to_have_class(re.compile(r"btn-secondary"))
+
+    def test_save_button_disabled_after_reverting_change(self, ui_page):
+        """Test that Save button goes back to disabled when a change is reverted to the original value."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Dirty tracking task E")
+        input_field.press("Enter")
+        ui_page.wait_for_selector(".task-title:has-text('Dirty tracking task E')")
+
+        ui_page.locator(".task-title:has-text('Dirty tracking task E')").click()
+        ui_page.wait_for_selector(".task-details")
+
+        textarea = ui_page.locator(".task-details textarea")
+
+        # Change the description
+        textarea.fill("Temporary change")
+        save_btn = ui_page.locator(".task-details button:has-text('Save')")
+        expect(save_btn).to_be_enabled()
+
+        # Revert to original (empty string — new tasks have no description)
+        textarea.fill("")
+        expect(save_btn).to_be_disabled()
+        expect(save_btn).to_have_class(re.compile(r"btn-secondary"))
+
 
 class TestSubtasks:
     """Test subtask functionality."""
