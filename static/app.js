@@ -435,7 +435,7 @@ function sharpei() {
             return {
                 description: task.description,
                 due_date_str: task.due_date_str,
-                priority: task.priority,
+                priority: String(task.priority),
                 category_id: task.category_id,
                 hashtags: task.hashtags,
             };
