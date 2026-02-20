@@ -185,7 +185,7 @@
                                                     <input type="text" class="form-control form-control-sm" x-model="task.hashtags" placeholder="#tags">
                                                 </div>
                                                 <div class="col-auto ms-auto">
-                                                    <button class="btn btn-sm btn-success" @click="saveTask(task)">Save</button>
+                                                    <button class="btn btn-sm" :class="isDirty(task) ? 'btn-success' : 'btn-secondary'" :disabled="!isDirty(task)" @click="saveTask(task)">Save</button>
                                                 </div>
                                             </div>
                                             
