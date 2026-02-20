@@ -12,6 +12,7 @@ function sharpei() {
         error: null,
         showArchived: false,
         showDetails: false,
+        taskSnapshots: {},
 
         showError(message) {
             this.error = message;
@@ -428,6 +429,26 @@ function sharpei() {
             } else {
                 this.expandedTasks.push(task.id);
             }
+        },
+
+        _snapshotFields(task) {
+            return {
+                description: task.description,
+                due_date_str: task.due_date_str,
+                priority: task.priority,
+                category_id: task.category_id,
+                hashtags: task.hashtags,
+            };
+        },
+
+        isDirty(task) {
+            const snap = this.taskSnapshots[task.id];
+            if (!snap) return false;
+            return snap.description !== task.description
+                || snap.due_date_str !== task.due_date_str
+                || snap.priority !== task.priority
+                || snap.category_id !== task.category_id
+                || snap.hashtags !== task.hashtags;
         },
 
         formatDate(dateStr, isCompleted = false) {
