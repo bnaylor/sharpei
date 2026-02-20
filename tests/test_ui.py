@@ -206,6 +206,37 @@ class TestTaskExpansion:
         high_priority_section = ui_page.locator("#list-p0")
         expect(high_priority_section).to_contain_text("Priority task")
 
+    def test_save_button_disabled_on_expand(self, ui_page):
+        """Test that Save button is disabled when a task is first expanded."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Dirty tracking task A")
+        input_field.press("Enter")
+        ui_page.wait_for_selector(".task-title:has-text('Dirty tracking task A')")
+
+        ui_page.locator(".task-title:has-text('Dirty tracking task A')").click()
+        ui_page.wait_for_selector(".task-details")
+
+        save_btn = ui_page.locator(".task-details button:has-text('Save')")
+        expect(save_btn).to_be_disabled()
+        expect(save_btn).to_have_class(re.compile(r"btn-secondary"))
+
+    def test_save_button_enabled_after_change(self, ui_page):
+        """Test that Save button enables after a field is changed."""
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Dirty tracking task B")
+        input_field.press("Enter")
+        ui_page.wait_for_selector(".task-title:has-text('Dirty tracking task B')")
+
+        ui_page.locator(".task-title:has-text('Dirty tracking task B')").click()
+        ui_page.wait_for_selector(".task-details")
+
+        textarea = ui_page.locator(".task-details textarea")
+        textarea.fill("Some new description")
+
+        save_btn = ui_page.locator(".task-details button:has-text('Save')")
+        expect(save_btn).to_be_enabled()
+        expect(save_btn).to_have_class(re.compile(r"btn-success"))
+
 
 class TestSubtasks:
     """Test subtask functionality."""
