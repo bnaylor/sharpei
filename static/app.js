@@ -383,6 +383,9 @@ function sharpei() {
             })
             .then(res => {
                 if (!res.ok) throw new Error('Failed to save task');
+                if (this.taskSnapshots[task.id]) {
+                    this.taskSnapshots[task.id] = this._snapshotFields(task);
+                }
                 this.fetchTasks();
             })
             .catch(err => this.showError(err.message));
