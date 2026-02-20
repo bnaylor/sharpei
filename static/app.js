@@ -441,11 +441,11 @@ function sharpei() {
 
         _snapshotFields(task) {
             return {
-                description: task.description,
+                description: task.description ?? '',
                 due_date_str: task.due_date_str,
                 priority: String(task.priority),  // coerce: select binding yields string, API returns int
                 category_id: task.category_id,
-                hashtags: task.hashtags,
+                hashtags: task.hashtags ?? '',
             };
         },
 
