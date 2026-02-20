@@ -426,8 +426,10 @@ function sharpei() {
         toggleExpand(task) {
             if (this.expandedTasks.includes(task.id)) {
                 this.expandedTasks = this.expandedTasks.filter(id => id !== task.id);
+                delete this.taskSnapshots[task.id];
             } else {
                 this.expandedTasks.push(task.id);
+                this.taskSnapshots[task.id] = this._snapshotFields(task);
             }
         },
 
