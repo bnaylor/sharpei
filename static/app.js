@@ -12,6 +12,9 @@ function sharpei() {
         error: null,
         showArchived: false,
         showDetails: false,
+        showSettings: false,
+        darkMode: localStorage.getItem('darkMode') === 'true' || 
+                 (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
         taskSnapshots: {},
 
         showError(message) {
@@ -19,21 +22,25 @@ function sharpei() {
             setTimeout(() => this.error = null, 4000);
         },
 
-        /**
-         * Parse quick-add syntax from task input.
-         * Syntax: Task title !priority #tag1 #tag2 @date >Category
-         *
-         * @param {string} input - Raw input string
-         * @returns {object} Parsed task data
-         */
+        toggleDarkMode() {
+            localStorage.setItem('darkMode', this.darkMode);
+        },
+
+        openSettings() {
+            this.showSettings = true;
+        },
+
+        closeSettings() {
+            this.showSettings = false;
+        },
+
         parseQuickAdd(input) {
             let title = input;
-            let priority = 1; // Default: Normal
+            let priority = 1; 
             let hashtags = [];
             let dueDate = null;
             let categoryName = null;
 
-            // Extract priority (!high, !h, !low, !l)
             const priorityMatch = title.match(/\s*!(high|h|low|l)\b/i);
             if (priorityMatch) {
                 const p = priorityMatch[1].toLowerCase();
@@ -41,21 +48,18 @@ function sharpei() {
                 title = title.replace(priorityMatch[0], '');
             }
 
-            // Extract hashtags (#tag)
             const tagMatches = title.match(/#\w+/g);
             if (tagMatches) {
                 hashtags = tagMatches;
                 title = title.replace(/#\w+/g, '');
             }
 
-            // Extract category (>CategoryName)
             const categoryMatch = title.match(/\s*>(\w+)/);
             if (categoryMatch) {
                 categoryName = categoryMatch[1];
                 title = title.replace(categoryMatch[0], '');
             }
 
-            // Extract due date (@date)
             const dateMatch = title.match(/\s*@(\S+)/);
             if (dateMatch) {
                 dueDate = this.parseDueDate(dateMatch[1]);
@@ -71,29 +75,22 @@ function sharpei() {
             };
         },
 
-        /**
-         * Parse a due date string into an ISO date.
-         * Supports: today, tomorrow, weekday names, +Nd, +Nw, YYYY-MM-DD
-         */
         parseDueDate(dateStr) {
             const today = new Date();
-            today.setHours(12, 0, 0, 0); // Noon to avoid timezone issues
+            today.setHours(12, 0, 0, 0); 
 
             const lower = dateStr.toLowerCase();
 
-            // today
             if (lower === 'today') {
                 return today.toISOString();
             }
 
-            // tomorrow
             if (lower === 'tomorrow') {
                 const d = new Date(today);
                 d.setDate(d.getDate() + 1);
                 return d.toISOString();
             }
 
-            // Relative: +3d, +2w
             const relativeMatch = lower.match(/^\+(\d+)([dw])$/);
             if (relativeMatch) {
                 const num = parseInt(relativeMatch[1]);
@@ -107,7 +104,6 @@ function sharpei() {
                 return d.toISOString();
             }
 
-            // Weekday names
             const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const dayIndex = weekdays.indexOf(lower);
             if (dayIndex !== -1) {
@@ -115,19 +111,17 @@ function sharpei() {
                 const currentDay = d.getDay();
                 let daysUntil = dayIndex - currentDay;
                 if (daysUntil <= 0) {
-                    daysUntil += 7; // Next week
+                    daysUntil += 7; 
                 }
                 d.setDate(d.getDate() + daysUntil);
                 return d.toISOString();
             }
 
-            // ISO date: YYYY-MM-DD
             if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
                 const d = new Date(dateStr + 'T12:00:00');
                 return d.toISOString();
             }
 
-            // Unrecognized - return null
             return null;
         },
 
@@ -136,22 +130,17 @@ function sharpei() {
                 this.fetchTasks();
             });
 
-            // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
-                // Ignore if typing in an input field
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-                // Ctrl/Cmd + Shift + A: Archive completed tasks
                 if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
                     e.preventDefault();
                     this.archiveCompleted();
                 }
-                // Ctrl/Cmd + Shift + H: Toggle show archived
                 if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'H') {
                     e.preventDefault();
                     this.toggleShowArchived();
                 }
-                // Ctrl/Cmd + Shift + D: Toggle show details
                 if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
                     e.preventDefault();
                     this.toggleShowDetails();
@@ -230,7 +219,6 @@ function sharpei() {
                     const newPriority = parseInt(toList.id.replace('list-p', ''));
                     const taskIds = Array.from(toList.querySelectorAll('.task-item-container')).map(item => item.getAttribute('data-id'));
                     
-                    // 1. Save new order
                     fetch('/api/tasks/reorder', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -238,7 +226,6 @@ function sharpei() {
                     })
                     .then(res => {
                         if (!res.ok) throw new Error('Failed to reorder tasks');
-                        // 2. If the group changed, update the priority of the moved task
                         if (fromList !== toList) {
                             const task = this.tasks.find(t => t.id == taskId);
                             if (task) {
@@ -298,10 +285,8 @@ function sharpei() {
         addTask() {
             if (!this.newTaskTitle.trim()) return;
 
-            // Parse quick-add syntax
             const parsed = this.parseQuickAdd(this.newTaskTitle);
 
-            // Resolve category: use parsed category name or fall back to selected
             let categoryId = this.selectedCategory;
             if (parsed.categoryName) {
                 const cat = this.categories.find(
@@ -355,7 +340,6 @@ function sharpei() {
 
         toggleTask(task) {
             task.completed = !task.completed;
-            // If uncompleting a task, also unarchive it
             if (!task.completed) {
                 task.archived = false;
             }
@@ -383,8 +367,6 @@ function sharpei() {
             })
             .then(res => {
                 if (!res.ok) throw new Error('Failed to save task');
-                // Refresh snapshot from client state before fetchTasks() replaces the task object.
-                // Valid because the backend echoes all 5 snapshotted fields back unchanged.
                 if (this.taskSnapshots[task.id]) {
                     this.taskSnapshots[task.id] = this._snapshotFields(task);
                 }
@@ -443,7 +425,7 @@ function sharpei() {
             return {
                 description: task.description ?? '',
                 due_date_str: task.due_date_str,
-                priority: String(task.priority),  // coerce: select binding yields string, API returns int
+                priority: String(task.priority),  
                 category_id: task.category_id,
                 hashtags: task.hashtags ?? '',
             };
@@ -452,7 +434,6 @@ function sharpei() {
         isDirty(task) {
             const snap = this.taskSnapshots[task.id];
             if (!snap) return false;
-            // Normalize null and empty string as equivalent for string fields
             const norm = v => (v == null ? '' : String(v));
             return norm(snap.description) !== norm(task.description)
                 || snap.due_date_str !== task.due_date_str
@@ -467,7 +448,6 @@ function sharpei() {
             const d = new Date(dateStr);
             const now = new Date();
 
-            // Normalize to start of day for comparison
             const dueDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -477,7 +457,6 @@ function sharpei() {
                 if (isCompleted) {
                     return { text: d.toLocaleDateString(), status: '' };
                 }
-                // Overdue
                 const absDays = Math.abs(diffDays);
                 let timeStr;
                 if (absDays >= 7) {
@@ -495,5 +474,9 @@ function sharpei() {
                 return { text: d.toLocaleDateString(), status: '' };
             }
         }
-    }
+    };
 }
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('sharpei', sharpei);
+});
