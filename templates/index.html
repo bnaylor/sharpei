@@ -6,27 +6,69 @@
     <title>Sharpei - TODO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+    <script src="/static/app.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@15.0.6/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.3/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
     <link rel="stylesheet" href="/static/style.css">
+    <script>
+        // Initial theme set to avoid flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme === null && systemDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
 </head>
-<body x-data="sharpei()">
+<body x-data="sharpei" x-effect="document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')">
     <!-- App Banner -->
     <header class="app-banner d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-2">
             <img src="/assets/icon_large.jpg" alt="Sharpei" class="app-icon">
             <span class="app-title">Sharpei</span>
         </div>
-        <a href="https://github.com/bnaylor/sharpei" target="_blank" class="text-white text-decoration-none small">
-            <i class="bi bi-book me-1"></i> Documentation
-        </a>
+        <div class="d-flex align-items-center gap-3">
+            <a href="https://github.com/bnaylor/sharpei" target="_blank" class="text-white text-decoration-none small">
+                <i class="bi bi-book me-1"></i> Documentation
+            </a>
+            <button type="button" class="btn btn-link text-white p-0" @click="openSettings()" title="Settings">
+                <i class="bi bi-gear-fill fs-5"></i>
+            </button>
+        </div>
     </header>
 
+    <!-- Settings Panel -->
+    <div class="settings-overlay" x-show="showSettings" x-cloak @click.self="closeSettings()">
+        <div class="settings-panel">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">Settings</h4>
+                <button type="button" class="btn-close" :class="darkMode ? 'btn-close-white' : ''" @click="closeSettings()"></button>
+            </div>
+
+            <div class="settings-section mb-4">
+                <h5>Appearance</h5>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" id="darkModeSwitch" x-model="darkMode" @change="toggleDarkMode()">
+                    <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h5>About</h5>
+                <p class="small text-muted">Sharpei - A sharp todo list.</p>
+                <a href="https://github.com/bnaylor/sharpei" target="_blank" class="btn btn-sm btn-outline-secondary w-100">
+                    <i class="bi bi-github me-1"></i> View on GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Error Toast -->
-    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
-        <div class="toast align-items-center text-bg-danger border-0" :class="error ? 'show' : ''" role="alert">
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050; pointer-events: none;">
+        <div class="toast align-items-center text-bg-danger border-0" :class="error ? 'show' : ''" role="alert" style="pointer-events: auto;">
             <div class="d-flex">
                 <div class="toast-body" x-text="error"></div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="error = null"></button>
@@ -137,7 +179,7 @@
                                         </div>
 
                                         <!-- Compact Details View (when Show Details is on) -->
-                                        <div class="task-compact-details px-3 py-2 border-start border-end bg-white"
+                                        <div class="task-compact-details px-3 py-2 border-start border-end"
                                              x-show="showDetails && !expandedTasks.includes(task.id) && (task.description || task.subtasks.length)">
                                             <div class="markdown-preview small mb-2" x-show="task.description" x-html="DOMPurify.sanitize(marked.parse(task.description || ''))"></div>
                                             <div class="subtasks-preview" x-show="task.subtasks.length">
@@ -151,7 +193,7 @@
                                         </div>
 
                                         <!-- Expanded Task Details -->
-                                        <div class="task-details p-3 bg-light border-start border-end" x-show="expandedTasks.includes(task.id)">
+                                        <div class="task-details p-3 border-start border-end" x-show="expandedTasks.includes(task.id)">
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
                                                     <label class="small text-muted">Description (Markdown)</label>
@@ -159,7 +201,7 @@
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="small text-muted">Preview</label>
-                                                    <div class="p-2 border rounded bg-white shadow-sm overflow-auto" style="height: 125px;" x-html="DOMPurify.sanitize(marked.parse(task.description || ''))"></div>
+                                                    <div class="p-2 border rounded themed-preview shadow-sm overflow-auto" style="height: 125px;" x-html="DOMPurify.sanitize(marked.parse(task.description || ''))"></div>
                                                 </div>
                                             </div>
                                             <div class="row g-2 align-items-center">
@@ -213,7 +255,5 @@
             </main>
         </div>
     </div>
-
-    <script src="/static/app.js"></script>
 </body>
 </html>
