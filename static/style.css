@@ -11,6 +11,10 @@
     --header-gradient: linear-gradient(135deg, #4285f4 0%, #34a853 50%, #fbbc05 100%);
 }
 
+[x-cloak] {
+    display: none !important;
+}
+
 [data-theme="dark"] {
     --bg-color: #121212;
     --text-color: #e0e0e0;
@@ -304,4 +308,96 @@ body {
 
 [data-theme="dark"] .btn-link.text-white {
     color: #fff !important;
+}
+
+/* Calendar View */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-top: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    background-color: var(--task-item-bg);
+}
+
+.calendar-header {
+    padding: 10px;
+    text-align: center;
+    font-weight: 600;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+.calendar-day {
+    min-height: 120px;
+    padding: 5px;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+.calendar-day.not-current-month {
+    background-color: var(--sidebar-bg);
+    opacity: 0.5;
+}
+
+.calendar-day.today {
+    background-color: rgba(66, 133, 244, 0.05);
+}
+
+.calendar-day.today .calendar-day-number {
+    background-color: #4285f4;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-day-number {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: var(--text-color);
+}
+
+.calendar-day-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.calendar-task {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background-color: #34a853;
+    color: white;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: transform 0.1s;
+}
+
+.calendar-task:hover {
+    transform: scale(1.02);
+}
+
+.calendar-task.completed {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.calendar-task.p0 { background-color: #ea4335; }
+.calendar-task.p1 { background-color: #34a853; }
+.calendar-task.p2 { background-color: #4285f4; }
+
+[data-theme="dark"] .calendar-day.today {
+    background-color: rgba(66, 133, 244, 0.15);
 }

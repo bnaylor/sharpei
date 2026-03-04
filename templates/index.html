@@ -127,6 +127,20 @@
 
                 <!-- Task Actions -->
                 <div class="mb-3 d-flex align-items-center gap-2">
+                    <div class="btn-group btn-group-sm me-2">
+                        <button class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-primary'" @click="viewMode = 'list'"><i class="bi bi-list-task"></i> List</button>
+                        <button class="btn" :class="viewMode === 'calendar' ? 'btn-primary' : 'btn-outline-primary'" @click="viewMode = 'calendar'"><i class="bi bi-calendar3"></i> Calendar</button>
+                    </div>
+
+                    <template x-if="viewMode === 'calendar'">
+                        <div class="d-flex align-items-center gap-2 me-auto calendar-nav">
+                            <button class="btn btn-sm btn-outline-secondary" @click="prevMonth()"><i class="bi bi-chevron-left"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary" @click="goToToday()">Today</button>
+                            <button class="btn btn-sm btn-outline-secondary" @click="nextMonth()"><i class="bi bi-chevron-right"></i></button>
+                            <span class="ms-2 fw-bold" x-text="monthName"></span>
+                        </div>
+                    </template>
+
                     <button class="btn btn-sm btn-outline-secondary" @click="archiveCompleted()" title="Archive completed tasks (Ctrl+Shift+A)">
                         <i class="bi bi-archive"></i> Clean Up
                     </button>
@@ -149,7 +163,7 @@
                 </div>
 
                 <!-- Task List -->
-                <div class="task-list" x-show="!loading">
+                <div class="task-list" x-show="!loading && viewMode === 'list'">
                     <template x-for="p in [0, 1, 2]">
                         <div class="priority-group mb-3" x-show="tasks.some(t => t.priority == p)">
                             <div class="priority-header small text-muted px-2 mb-1" x-text="p == 0 ? 'High Priority' : (p == 1 ? 'Normal' : 'Low Priority')"></div>
@@ -255,6 +269,30 @@
                             </div>
                         </div>
                     </template>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="calendar-view" x-show="!loading && viewMode === 'calendar'" x-cloak>
+                    <div class="calendar-grid">
+                        <template x-for="dayName in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']">
+                            <div class="calendar-header" x-text="dayName"></div>
+                        </template>
+                        <template x-for="day in calendarDays">
+                            <div class="calendar-day" :class="{'not-current-month': !day.currentMonth, 'today': day.isToday}">
+                                <div class="calendar-day-number" x-text="day.day"></div>
+                                <div class="calendar-day-tasks">
+                                    <template x-for="task in day.tasks" :key="task.id">
+                                        <div class="calendar-task" 
+                                             :class="{'completed': task.completed, 'p0': task.priority == 0, 'p1': task.priority == 1, 'p2': task.priority == 2}"
+                                             :title="task.title"
+                                             @click="toggleExpand(task); viewMode = 'list'">
+                                            <span x-text="task.title"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </main>
         </div>

@@ -13,6 +13,9 @@ function sharpei() {
         showArchived: false,
         showDetails: false,
         showSettings: false,
+        viewMode: 'list',
+        currentMonth: new Date().getMonth(),
+        currentYear: new Date().getFullYear(),
         darkMode: localStorage.getItem('darkMode') === 'true' || 
                  (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
         today: new Date().setHours(0, 0, 0, 0),
@@ -229,6 +232,84 @@ function sharpei() {
         filterByTag(tag) {
             this.searchQuery = tag;
             this.fetchTasks();
+        },
+
+        get monthName() {
+            return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' })
+                .format(new Date(this.currentYear, this.currentMonth));
+        },
+
+        get calendarDays() {
+            const days = [];
+            const firstDay = new Date(this.currentYear, this.currentMonth, 1);
+            const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
+            
+            // Padding for the start of the month
+            const firstDayOfWeek = firstDay.getDay(); // 0 (Sun) to 6 (Sat)
+            const prevMonthLastDay = new Date(this.currentYear, this.currentMonth, 0).getDate();
+            for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+                days.push({
+                    day: prevMonthLastDay - i,
+                    month: this.currentMonth - 1,
+                    year: this.currentYear,
+                    currentMonth: false
+                });
+            }
+
+            // Days of the current month
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                days.push({
+                    day: i,
+                    month: this.currentMonth,
+                    year: this.currentYear,
+                    currentMonth: true,
+                    isToday: new Date().toDateString() === new Date(this.currentYear, this.currentMonth, i).toDateString()
+                });
+            }
+
+            // Padding for the end of the month to fill 6 rows (42 days)
+            const remaining = 42 - days.length;
+            for (let i = 1; i <= remaining; i++) {
+                days.push({
+                    day: i,
+                    month: this.currentMonth + 1,
+                    year: this.currentYear,
+                    currentMonth: false
+                });
+            }
+
+            // Attach tasks to days
+            return days.map(d => {
+                const dateStr = `${d.year}-${String(d.month + 1).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+                return {
+                    ...d,
+                    tasks: this.tasks.filter(t => t.due_date && t.due_date.startsWith(dateStr))
+                };
+            });
+        },
+
+        prevMonth() {
+            if (this.currentMonth === 0) {
+                this.currentMonth = 11;
+                this.currentYear--;
+            } else {
+                this.currentMonth--;
+            }
+        },
+
+        nextMonth() {
+            if (this.currentMonth === 11) {
+                this.currentMonth = 0;
+                this.currentYear++;
+            } else {
+                this.currentMonth++;
+            }
+        },
+
+        goToToday() {
+            const today = new Date();
+            this.currentMonth = today.getMonth();
+            this.currentYear = today.getFullYear();
         },
 
         initSortable(el, priority) {
