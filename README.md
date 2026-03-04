@@ -10,18 +10,19 @@ Sharpei runs entirely on your machine with no cloud dependencies, stores data in
 
 - **Local-first** - Runs on localhost, no internet required
 - **SQLite storage** - Simple, portable database that AI tools can read
-- **Categories** - Organize tasks into projects or areas
-- **Priority levels** - High (red), Normal (green), Low (blue)
+- **Calendar View** - Interactive monthly grid to visualize deadlines
+- **Bulk Actions** - Multi-select tasks for group updates (move, priority, delete)
+- **Task Recurrence** - Automatically repeating tasks (daily, weekly, custom)
+- **Smart Categories** - Save search queries as persistent sidebar items
+- **Advanced Search** - Filter by status (`is:overdue`), priority, and more
+- **PWA Support** - Install as a standalone desktop app with offline caching
+- **Data Portability** - JSON export/import and automated daily backups
 - **Markdown notes** - Capture details about your tasks in markdown syntax
 - **Subtasks** - Break down tasks into smaller items
 - **Hashtags** - Tag tasks for easy filtering
-- **Due dates** - With smart display (Today, Tomorrow, Overdue)
-- **Quick-add syntax** - Rapidly create tasks with `!priority #tags @dates >Category`
-- **Drag-and-drop** - Reorder tasks within priority groups
-- **Search** - Find tasks by title, description, or tags
-- **Archive** - Clean up completed tasks without deleting
+- **Quick-add syntax** - Rapidly create tasks with `!priority #tags @dates *recur >Category`
 - **MCP server** - AI assistant integration via Model Context Protocol
-- **Keyboard shortcuts** - Power-user friendly
+- **Dark Mode** - Full support for light and dark themes
 
 ## Quick Start
 
@@ -49,15 +50,16 @@ Create tasks rapidly from the input field:
 
 ```
 Call dentist @tomorrow !high #health
-Finish report >Work #q4 @friday
-Buy groceries @+2d !low
+Submit timesheet *weekly @friday >Work
+Water plants *3d @tomorrow
 ```
 
 | Element | Syntax | Examples |
 |---------|--------|----------|
 | Priority | `!high` `!low` | `!high`, `!h`, `!low`, `!l` |
 | Hashtags | `#tag` | `#work #urgent` |
-| Due date | `@date` | `@today`, `@tomorrow`, `@monday`, `@+3d`, `@+2w`, `@2025-02-15` |
+| Due date | `@date` | `@today`, `@monday`, `@+3d`, `@2025-02-15` |
+| Recurrence | `*pattern` | `*daily`, `*weekly`, `*monthly`, `*3d`, `*2w` |
 | Category | `>name` | `>Work`, `>Personal` |
 
 See [doc/quick-add.md](doc/quick-add.md) for full documentation.
@@ -78,47 +80,22 @@ Sharpei includes an MCP server for AI assistant integration:
 python mcp_server.py
 ```
 
-Configure in your AI tool (Claude Code, Claude Desktop, etc.):
-
-```json
-{
-  "mcpServers": {
-    "sharpei": {
-      "command": "python",
-      "args": ["/path/to/sharpei/mcp_server.py"],
-      "cwd": "/path/to/sharpei"
-    }
-  }
-}
-```
-
-See [doc/mcp.md](doc/mcp.md) for available tools and full documentation.
+See [doc/mcp.md](doc/mcp.md) for full documentation.
 
 ## Testing
 
 ```bash
-# Run all tests (118 total)
+# Run all tests (125 total)
 pytest
-
-# Run specific test suites
-pytest tests/test_api.py      # API tests (36)
-pytest tests/test_mcp_server.py  # MCP tests (30)
-pytest tests/test_ui.py       # UI tests (39)
 ```
-
-See [doc/testing.md](doc/testing.md) for testing documentation.
-
-## Tech Stack
-
-- **Backend**: FastAPI, SQLAlchemy, SQLite
-- **Frontend**: Alpine.js, Bootstrap 5, Sortable.js
-- **Testing**: pytest, Playwright
 
 ## Documentation
 
 - [Quick-Add Syntax](doc/quick-add.md)
 - [Search & Smart Filters](doc/search.md)
 - [Calendar View](doc/calendar.md)
+- [Bulk Actions](doc/bulk-actions.md)
+- [Data Portability & Backups](doc/data-portability.md)
 - [MCP Server](doc/mcp.md)
 - [Testing](doc/testing.md)
 
