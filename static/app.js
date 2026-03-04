@@ -15,6 +15,7 @@ function sharpei() {
         showSettings: false,
         darkMode: localStorage.getItem('darkMode') === 'true' || 
                  (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
+        today: new Date().setHours(0, 0, 0, 0),
         taskSnapshots: {},
 
         showError(message) {
@@ -66,11 +67,19 @@ function sharpei() {
                 title = title.replace(dateMatch[0], '');
             }
 
+            const recurrenceMatch = title.match(/\s*\*(\S+)/);
+            let recurrence = null;
+            if (recurrenceMatch) {
+                recurrence = recurrenceMatch[1];
+                title = title.replace(recurrenceMatch[0], '');
+            }
+
             return {
                 title: title.trim(),
                 priority,
                 hashtags: hashtags.join(' '),
                 dueDate,
+                recurrence,
                 categoryName
             };
         },
@@ -130,6 +139,14 @@ function sharpei() {
                 this.fetchTasks();
             });
 
+            // Timer to notice when the day has flipped
+            setInterval(() => {
+                const now = new Date().setHours(0, 0, 0, 0);
+                if (now !== this.today) {
+                    this.today = now;
+                }
+            }, 60000);
+
             document.addEventListener('keydown', (e) => {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -157,13 +174,21 @@ function sharpei() {
         },
 
         transformTask(t) {
+            const tags = [];
+            if (t.hashtags) {
+                const matches = t.hashtags.match(/#\w+/g);
+                if (matches) {
+                    matches.forEach(m => tags.push(m));
+                }
+            }
             return {
                 ...t,
                 due_date_str: t.due_date ? t.due_date.split('T')[0] : '',
                 priority: String(t.priority),
                 newSubtaskTitle: '',
                 category_id: t.category_id !== null ? t.category_id.toString() : "",
-                tags_array: t.hashtags ? t.hashtags.split(/[\s,]+/).filter(tag => tag.length > 0) : [],
+                tags_array: tags,
+                recurrence: t.recurrence || '',
                 subtasks: (t.subtasks || []).map(sub => this.transformTask(sub))
             };
         },
@@ -302,7 +327,8 @@ function sharpei() {
                 category_id: categoryId,
                 priority: parsed.priority,
                 hashtags: parsed.hashtags || null,
-                due_date: parsed.dueDate
+                due_date: parsed.dueDate,
+                recurrence: parsed.recurrence
             };
 
             fetch('/api/tasks', {
@@ -354,6 +380,7 @@ function sharpei() {
                 priority: parseInt(task.priority),
                 position: task.position || 0,
                 hashtags: task.hashtags,
+                recurrence: task.recurrence,
                 completed: task.completed,
                 archived: task.archived || false,
                 category_id: (task.category_id && task.category_id !== "") ? parseInt(task.category_id) : null,
@@ -428,6 +455,7 @@ function sharpei() {
                 priority: String(task.priority),  
                 category_id: task.category_id,
                 hashtags: task.hashtags ?? '',
+                recurrence: task.recurrence ?? '',
             };
         },
 
@@ -439,17 +467,18 @@ function sharpei() {
                 || snap.due_date_str !== task.due_date_str
                 || snap.priority !== task.priority
                 || snap.category_id !== task.category_id
-                || norm(snap.hashtags) !== norm(task.hashtags);
+                || norm(snap.hashtags) !== norm(task.hashtags)
+                || norm(snap.recurrence) !== norm(task.recurrence);
         },
 
         formatDate(dateStr, isCompleted = false) {
             if (!dateStr) return { text: '', status: '' };
 
             const d = new Date(dateStr);
-            const now = new Date();
+            const todayDate = new Date(this.today);
 
             const dueDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const today = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
 
             const diffDays = Math.round((dueDate - today) / (1000 * 60 * 60 * 24));
 

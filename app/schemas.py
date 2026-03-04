@@ -13,6 +13,7 @@ class TaskBase(BaseModel):
     priority: int = 1
     position: Optional[int] = None
     hashtags: Optional[str] = None
+    recurrence: Optional[str] = None
     completed: bool = False
     archived: bool = False
     category_id: Optional[int] = None

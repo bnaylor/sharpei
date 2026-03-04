@@ -339,5 +339,48 @@ class TestPriority:
         assert result[2]["title"] == "Low"
 
 
+class TestRecurrence:
+    """Test task recurrence in MCP server."""
+
+    def test_create_recurring_task(self, mcp_server):
+        """Test creating a task with recurrence."""
+        result = json.loads(mcp_server.create_task(
+            title="Daily standup",
+            due_date="2025-02-15",
+            recurrence="daily"
+        ))
+
+        assert result["title"] == "Daily standup"
+        assert result["recurrence"] == "daily"
+        assert "2025-02-15" in result["due_date"]
+
+    def test_update_recurrence(self, mcp_server):
+        """Test updating a task's recurrence."""
+        task = json.loads(mcp_server.create_task("Monthly review"))
+        assert task["recurrence"] is None
+
+        result = json.loads(mcp_server.update_task(
+            task_id=task["id"],
+            recurrence="monthly"
+        ))
+
+        assert result["recurrence"] == "monthly"
+
+    def test_complete_recurring_task_advances_date(self, mcp_server):
+        """Test that completing a recurring task advances its due date."""
+        task = json.loads(mcp_server.create_task(
+            title="Weekly report",
+            due_date="2025-02-15",
+            recurrence="weekly"
+        ))
+
+        # Complete the task
+        result = json.loads(mcp_server.complete_task(task["id"]))
+
+        # Completion should be reset to False, and date moved by 7 days
+        assert result["completed"] is False
+        assert "2025-02-22" in result["due_date"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

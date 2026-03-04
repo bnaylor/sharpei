@@ -20,6 +20,7 @@ class Task(Base):
     priority = Column(Integer, default=1) # 0 (High), 1 (Normal), 2 (Low)
     position = Column(Integer, default=0)
     hashtags = Column(String, nullable=True) # Stored as space-separated or comma-separated string
+    recurrence = Column(String, nullable=True) # e.g., 'daily', 'weekly', 'monthly', or '7d', '14d'
     completed = Column(Boolean, default=False)
     archived = Column(Boolean, default=False)
 

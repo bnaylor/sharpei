@@ -423,5 +423,62 @@ class TestPositionAutoAssignment:
         assert t3["position"] == 2
 
 
+class TestRecurrence:
+    """Test task recurrence via API."""
+
+    def test_create_recurring_task(self, api_client):
+        """Test creating a recurring task."""
+        response = api_client.post("/api/tasks", json={
+            "title": "Daily workout",
+            "due_date": "2025-02-15T12:00:00",
+            "recurrence": "daily"
+        })
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["recurrence"] == "daily"
+
+    def test_complete_recurring_task_advances_date(self, api_client):
+        """Test that completing a recurring task via API advances its due date."""
+        task = api_client.post("/api/tasks", json={
+            "title": "Weekly meeting",
+            "due_date": "2025-02-15T12:00:00",
+            "recurrence": "weekly"
+        }).json()
+
+        # Complete it
+        response = api_client.put(f"/api/tasks/{task['id']}", json={
+            "title": task["title"],
+            "completed": True
+        })
+
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should be uncompleted again with new date
+        assert data["completed"] is False
+        assert "2025-02-22" in data["due_date"]
+
+    def test_recurrence_without_due_date_does_nothing(self, api_client):
+        """Test that recurrence without a due date doesn't crash or advance."""
+        task = api_client.post("/api/tasks", json={
+            "title": "Recur without date",
+            "recurrence": "daily"
+        }).json()
+
+        # Complete it
+        response = api_client.put(f"/api/tasks/{task['id']}", json={
+            "title": task["title"],
+            "completed": True
+        })
+
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Since there's no due_date, it just stays completed
+        assert data["completed"] is True
+        assert data["due_date"] is None
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

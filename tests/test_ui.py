@@ -694,5 +694,66 @@ class TestBugFixes:
         expect(doc_link).to_have_attribute("href", "https://github.com/bnaylor/sharpei")
 
 
+class TestUIRefresh:
+    """Tests for UI refresh functionality."""
+
+    def test_day_flip_refreshes_due_dates(self, ui_page):
+        """Test that due date labels refresh when the day flips."""
+        # 1. Add a task due today
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Refresh test task @today")
+        input_field.press("Enter")
+        
+        ui_page.wait_for_selector(".task-item:has-text('Refresh test task')")
+        task_item = ui_page.locator(".task-item:has-text('Refresh test task')")
+        
+        # Verify it shows "Today"
+        expect(task_item.locator(".due-date")).to_contain_text("Today")
+        expect(task_item.locator(".due-date")).to_have_class(re.compile(r"urgent"))
+        
+        # 2. Simulate a day flip
+        ui_page.evaluate("""
+            const el = document.querySelector('[x-data]');
+            const component = Alpine.$data(el);
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            component.today = tomorrow.getTime();
+        """)
+        
+        # 3. Verify it now shows "Overdue: 1d"
+        ui_page.wait_for_timeout(500)
+        expect(task_item.locator(".due-date")).to_contain_text("Overdue: 1d")
+        expect(task_item.locator(".due-date")).to_have_class(re.compile(r"overdue"))
+
+    def test_tomorrow_becomes_today_on_day_flip(self, ui_page):
+        """Test that 'Tomorrow' becomes 'Today' when the day flips."""
+        # 1. Add a task due tomorrow
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Future task @tomorrow")
+        input_field.press("Enter")
+        
+        ui_page.wait_for_selector(".task-item:has-text('Future task')")
+        task_item = ui_page.locator(".task-item:has-text('Future task')")
+        
+        # Verify it shows "Tomorrow"
+        expect(task_item.locator(".due-date")).to_contain_text("Tomorrow")
+        
+        # 2. Simulate a day flip
+        ui_page.evaluate("""
+            const el = document.querySelector('[x-data]');
+            const component = Alpine.$data(el);
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            component.today = tomorrow.getTime();
+        """)
+        
+        # 3. Verify it now shows "Today"
+        ui_page.wait_for_timeout(500)
+        expect(task_item.locator(".due-date")).to_contain_text("Today")
+        expect(task_item.locator(".due-date")).to_have_class(re.compile(r"urgent"))
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
