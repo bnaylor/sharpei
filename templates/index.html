@@ -205,10 +205,16 @@
                                                       :class="formatDate(task.due_date, task.completed).status"
                                                       x-text="formatDate(task.due_date, task.completed).text"></span>
                                                 <i class="bi bi-repeat small me-2 text-muted" x-show="task.recurrence" :title="'Repeats: ' + task.recurrence"></i>
-                                                <span class="text-muted small me-2 cursor-pointer" style="font-size: 0.7rem;" 
+                                                <span class="text-muted small me-2 cursor-pointer position-relative" style="font-size: 0.7rem;" 
                                                       x-text="'#' + task.id" 
                                                       title="Click to copy ID"
-                                                      @click.stop="copyToClipboard(task.id)"></span>
+                                                      @click.stop="copyToClipboard(task.id, task.id)">
+                                                    <span class="copy-feedback badge bg-success position-absolute start-50 translate-middle-x" 
+                                                          x-show="typeof copyingTaskId !== 'undefined' && copyingTaskId === task.id" 
+                                                          x-transition:enter="fade-in"
+                                                          x-transition:leave="fade-out"
+                                                          x-cloak>Copied!</span>
+                                                </span>
                                                 <button class="btn btn-sm btn-link text-danger p-0 ms-2" @click.stop="deleteTask(task.id)"><i class="bi bi-trash"></i></button>
                                             </div>
                                         </div>

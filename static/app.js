@@ -19,6 +19,7 @@ function sharpei() {
         selectedTasks: [],
         lastSelectedTaskId: null,
         bulkMode: false,
+        copyingTaskId: null,
         darkMode: localStorage.getItem('darkMode') === 'true' || 
                  (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
         today: new Date().setHours(0, 0, 0, 0),
@@ -41,9 +42,16 @@ function sharpei() {
             this.showSettings = false;
         },
 
-        copyToClipboard(text) {
+        copyToClipboard(text, taskId = null) {
             navigator.clipboard.writeText(text).then(() => {
-                // We could add a toast here, but for now simple console log
+                if (taskId) {
+                    this.copyingTaskId = taskId;
+                    setTimeout(() => {
+                        if (this.copyingTaskId === taskId) {
+                            this.copyingTaskId = null;
+                        }
+                    }, 1500);
+                }
                 console.log('Copied to clipboard:', text);
             }).catch(err => this.showError('Failed to copy to clipboard'));
         },
