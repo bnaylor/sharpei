@@ -27,6 +27,12 @@ def delete_category(db: Session, category_id: int):
         db.commit()
     return db_category
 
+def clear_all_data(db: Session):
+    """Delete all tasks and categories."""
+    db.query(models.Task).delete()
+    db.query(models.Category).delete()
+    db.commit()
+
 # Tasks
 def get_task(db: Session, task_id: int):
     return db.query(models.Task).filter(models.Task.id == task_id).first()

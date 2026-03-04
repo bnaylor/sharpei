@@ -38,6 +38,58 @@ function sharpei() {
             this.showSettings = false;
         },
 
+        exportData() {
+            fetch('/api/data/export')
+                .then(res => {
+                    if (!res.ok) throw new Error('Export failed');
+                    return res.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `sharpei_export_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                })
+                .catch(err => this.showError(err.message));
+        },
+
+        importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!confirm('This will DELETE all current tasks and categories and replace them with the data from the file. Are you sure you want to proceed?')) {
+                event.target.value = '';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            this.loading = true;
+            fetch('/api/data/import', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => {
+                if (!res.ok) return res.json().then(err => { throw new Error(err.detail || 'Import failed'); });
+                return res.json();
+            })
+            .then(data => {
+                this.showSettings = false;
+                this.fetchCategories().then(() => this.fetchTasks());
+                alert('Data imported successfully!');
+            })
+            .catch(err => this.showError(err.message))
+            .finally(() => {
+                this.loading = false;
+                event.target.value = '';
+            });
+        },
+
         parseQuickAdd(input) {
             let title = input;
             let priority = 1; 

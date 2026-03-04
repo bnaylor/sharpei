@@ -56,6 +56,23 @@
                 </div>
             </div>
 
+            <div class="settings-section mb-4">
+                <h5>Data Management</h5>
+                <p class="small text-muted mb-2">Back up your tasks or migrate from another instance.</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-sm btn-outline-primary" @click="exportData()">
+                        <i class="bi bi-download me-1"></i> Export to JSON
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" @click="$refs.importFile.click()">
+                        <i class="bi bi-upload me-1"></i> Import from JSON
+                    </button>
+                    <input type="file" x-ref="importFile" class="d-none" accept=".json" @change="importData($event)">
+                </div>
+                <p class="small text-muted mt-2 mb-0" style="font-size: 0.75rem;">
+                    <i class="bi bi-shield-check"></i> Automatic daily backups are saved to the <code>backups/</code> folder.
+                </p>
+            </div>
+
             <div class="settings-section">
                 <h5>About</h5>
                 <p class="small text-muted">Sharpei - A sharp todo list.</p>

@@ -119,6 +119,7 @@ See [doc/testing.md](doc/testing.md) for testing documentation.
 - [Quick-Add Syntax](doc/quick-add.md)
 - [Search & Smart Filters](doc/search.md)
 - [Calendar View](doc/calendar.md)
+- [Data Portability & Backups](doc/data-portability.md)
 - [MCP Server](doc/mcp.md)
 - [Testing](doc/testing.md)
 
