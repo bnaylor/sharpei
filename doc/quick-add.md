@@ -77,6 +77,29 @@ If omitted, the task uses the currently selected category (or no category if "Al
 
 **Note:** Category names are case-insensitive and must match an existing category.
 
+### Recurrence
+
+Set tasks to repeat automatically using `*pattern`:
+
+| Syntax | Meaning |
+|--------|---------|
+| `*daily` | Repeat every day |
+| `*weekly` | Repeat every week |
+| `*monthly` | Repeat every month (30 days) |
+| `*3d` | Repeat every 3 days |
+| `*2w` | Repeat every 2 weeks |
+
+**Behavior:** When you mark a recurring task as completed, its due date is automatically advanced by the specified interval and it is unmarked as completed.
+
+**Note:** A due date (`@date`) is required for recurrence to function.
+
+**Examples:**
+```
+Check mail *daily @today
+Submit timesheet *weekly @friday
+Water plants *3d @tomorrow
+```
+
 ## Combined Examples
 
 ```
