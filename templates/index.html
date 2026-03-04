@@ -203,11 +203,13 @@
                                         <div class="task-item d-flex align-items-center p-2 border-bottom"
                                              :class="{'text-muted': task.completed, 'archived': task.archived, 'selected': selectedTasks.includes(task.id)}"
                                              :style="task.priority == 0 ? 'border-left: 4px solid #ea4335' : (task.priority == 2 ? 'border-left: 4px solid #4285f4' : 'border-left: 4px solid #34a853')">
-                                            <div class="d-flex align-items-center me-2" x-show="bulkMode" x-cloak>
-                                                <input class="form-check-input select-task" type="checkbox" :checked="selectedTasks.includes(task.id)" @click.stop="toggleSelect(task.id, $event)">
-                                            </div>
+                                            <template x-if="bulkMode">
+                                                <div class="d-flex align-items-center me-2">
+                                                    <input class="form-check-input select-task" type="checkbox" :checked="selectedTasks.includes(task.id)" @click.stop="toggleSelect(task.id, $event)">
+                                                </div>
+                                            </template>
                                             <i class="bi bi-grip-vertical text-muted me-1 drag-handle"></i>
-                                            <input class="form-check-input me-2 toggle-completion" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)">
+                                            <input class="form-check-input me-2 toggle-completion" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)" x-show="!bulkMode">
                                             <span class="flex-grow-1 task-title" :class="task.completed ? 'text-decoration-line-through' : ''" x-text="task.title" @click="toggleExpand(task)"></span>
                                             <div class="task-meta d-flex align-items-center">
                                                 <template x-for="tag in task.tags_array">
