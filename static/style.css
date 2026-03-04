@@ -190,6 +190,11 @@ body {
     border-color: var(--border-color);
 }
 
+[data-theme="dark"] .form-control::placeholder {
+    color: #888888;
+    opacity: 1;
+}
+
 [data-theme="dark"] .form-control:focus,
 [data-theme="dark"] .form-select:focus {
     background-color: var(--input-bg);

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func, desc
 from typing import List, Optional, Union
+from datetime import datetime, timedelta
 from . import models, schemas
 
 # Categories
@@ -94,6 +95,37 @@ def update_task(db: Session, task_id: int, task_update: Union[schemas.TaskCreate
         if not hasattr(db_task, var):
             continue
         setattr(db_task, var, value)
+
+    # Handle recurring tasks
+    if db_task.completed and db_task.recurrence and db_task.due_date:
+        # Move due date forward
+        new_due_date = db_task.due_date
+        
+        r = db_task.recurrence.lower()
+        if r == 'daily':
+            new_due_date += timedelta(days=1)
+        elif r == 'weekly':
+            new_due_date += timedelta(weeks=1)
+        elif r == 'monthly':
+            # Simplified monthly: just add 30 days
+            new_due_date += timedelta(days=30)
+        elif r.endswith('d'):
+            try:
+                days = int(r[:-1])
+                new_due_date += timedelta(days=days)
+            except ValueError:
+                pass
+        elif r.endswith('w'):
+            try:
+                weeks = int(r[:-1])
+                new_due_date += timedelta(weeks=weeks)
+            except ValueError:
+                pass
+        
+        # If we successfully calculated a new date, reset completed status and update due date
+        if new_due_date != db_task.due_date:
+            db_task.completed = False
+            db_task.due_date = new_due_date
 
     db.commit()
     db.refresh(db_task)

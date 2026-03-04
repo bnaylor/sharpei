@@ -46,6 +46,7 @@ def task_to_dict(task: Task) -> dict:
         "priority": task.priority,
         "priority_label": {0: "High", 1: "Normal", 2: "Low"}.get(task.priority, "Normal"),
         "hashtags": task.hashtags,
+        "recurrence": task.recurrence,
         "completed": task.completed,
         "archived": task.archived,
         "category_id": task.category_id,
@@ -169,6 +170,7 @@ def create_task(
     due_date: Optional[str] = None,
     priority: int = 1,
     hashtags: Optional[str] = None,
+    recurrence: Optional[str] = None,
     category_id: Optional[int] = None,
     parent_id: Optional[int] = None
 ) -> str:
@@ -180,6 +182,7 @@ def create_task(
         due_date: Due date in ISO format YYYY-MM-DD (optional)
         priority: Priority level - 0=High, 1=Normal, 2=Low (default: 1)
         hashtags: Space or comma separated hashtags (optional)
+        recurrence: Recurrence pattern (e.g., 'daily', 'weekly', 'monthly', '7d') (optional)
         category_id: Category ID to assign the task to (optional)
         parent_id: Parent task ID if this is a subtask (optional)
 
@@ -203,6 +206,7 @@ def create_task(
             due_date=parsed_due_date,
             priority=priority,
             hashtags=hashtags,
+            recurrence=recurrence,
             category_id=category_id,
             parent_id=parent_id
         )
@@ -221,6 +225,7 @@ def update_task(
     due_date: Optional[str] = None,
     priority: Optional[int] = None,
     hashtags: Optional[str] = None,
+    recurrence: Optional[str] = None,
     category_id: Optional[int] = None,
     completed: Optional[bool] = None,
     archived: Optional[bool] = None
@@ -236,6 +241,7 @@ def update_task(
         due_date: New due date in ISO format YYYY-MM-DD, or empty string to clear (optional)
         priority: New priority 0=High, 1=Normal, 2=Low (optional)
         hashtags: New hashtags (optional)
+        recurrence: New recurrence pattern (optional)
         category_id: New category ID, or -1 to remove from category (optional)
         completed: Mark as completed or not (optional)
         archived: Mark as archived or not (optional)
@@ -263,6 +269,8 @@ def update_task(
             update_data['priority'] = priority
         if hashtags is not None:
             update_data['hashtags'] = hashtags
+        if recurrence is not None:
+            update_data['recurrence'] = recurrence
         if category_id is not None:
             update_data['category_id'] = None if category_id == -1 else category_id
         if completed is not None:
