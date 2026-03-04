@@ -12,7 +12,7 @@ def get_category(db: Session, category_id: int):
     return db.query(models.Category).filter(models.Category.id == category_id).first()
 
 def create_category(db: Session, category: schemas.CategoryCreate):
-    db_category = models.Category(name=category.name)
+    db_category = models.Category(name=category.name, query=category.query)
     db.add(db_category)
     db.commit()
     db.refresh(db_category)
@@ -40,13 +40,75 @@ def get_tasks(
 ):
     query = db.query(models.Task)
 
+    # If category_id is provided, check if it's a smart category
+    if category_id is not None:
+        db_category = get_category(db, category_id)
+        if db_category and db_category.query:
+            # It's a smart category! Merge its query with the search param
+            if search:
+                search = f"{db_category.query} {search}"
+            else:
+                search = db_category.query
+            # Don't filter by category_id since the smart query handles it
+            category_id = None
+
     if search:
-        search_filter = or_(
-            models.Task.title.ilike(f"%{search}%"),
-            models.Task.description.ilike(f"%{search}%"),
-            models.Task.hashtags.ilike(f"%{search}%")
-        )
-        query = query.filter(search_filter)
+        # Split search into tokens
+        tokens = search.split()
+        filters = []
+        remaining_search = []
+        
+        for token in tokens:
+            if token.lower().startswith('is:'):
+                val = token[3:].lower()
+                if val == 'overdue':
+                    filters.append(models.Task.due_date < datetime.now())
+                    filters.append(models.Task.completed == False)
+                elif val == 'completed':
+                    filters.append(models.Task.completed == True)
+                elif val == 'pending':
+                    filters.append(models.Task.completed == False)
+                elif val == 'archived':
+                    show_archived = True
+                    filters.append(models.Task.archived == True)
+            elif token.lower().startswith('priority:') or token.lower().startswith('p:'):
+                parts = token.split(':')
+                if len(parts) > 1:
+                    val = parts[1].lower()
+                    p_map = {'high': 0, 'h': 0, 'normal': 1, 'n': 1, 'low': 2, 'l': 2}
+                    if val in p_map:
+                        filters.append(models.Task.priority == p_map[val])
+                    elif val.isdigit():
+                        filters.append(models.Task.priority == int(val))
+            elif token.lower().startswith('has:'):
+                val = token[4:].lower()
+                if val == 'due':
+                    filters.append(models.Task.due_date != None)
+                elif val == 'tags':
+                    filters.append(models.Task.hashtags != None)
+                    filters.append(models.Task.hashtags != '')
+                elif val in ('description', 'desc'):
+                    filters.append(models.Task.description != None)
+                    filters.append(models.Task.description != '')
+            elif token.lower().startswith('category:'):
+                parts = token.split(':')
+                if len(parts) > 1:
+                    cat_name = parts[1]
+                    query = query.join(models.Category, isouter=True).filter(models.Category.name.ilike(f"%{cat_name}%"))
+            else:
+                remaining_search.append(token)
+
+        if filters:
+            query = query.filter(*filters)
+
+        if remaining_search:
+            text_search = " ".join(remaining_search)
+            search_filter = or_(
+                models.Task.title.ilike(f"%{text_search}%"),
+                models.Task.description.ilike(f"%{text_search}%"),
+                models.Task.hashtags.ilike(f"%{text_search}%")
+            )
+            query = query.filter(search_filter)
     else:
         # Only show top-level tasks if not searching
         query = query.filter(models.Task.parent_id == None)

@@ -7,6 +7,7 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
+    query = Column(String, nullable=True) # Search query for smart categories
     
     tasks = relationship("Task", back_populates="category")
 

@@ -42,6 +42,7 @@ class Task(TaskBase):
 
 class CategoryBase(BaseModel):
     name: str
+    query: Optional[str] = None
 
 class CategoryCreate(CategoryBase):
     pass

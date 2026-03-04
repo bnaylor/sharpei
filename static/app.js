@@ -359,11 +359,20 @@ function sharpei() {
         },
 
         addCategory() {
-            if (!this.newCategoryName.trim()) return;
+            let name = this.newCategoryName.trim();
+            if (!name) return;
+
+            let query = null;
+            const match = name.match(/(.*)\[(.*)\]/);
+            if (match) {
+                name = match[1].trim();
+                query = match[2].trim();
+            }
+
             fetch('/api/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: this.newCategoryName })
+                body: JSON.stringify({ name, query })
             })
             .then(res => {
                 if (!res.ok) throw new Error('Failed to add category');

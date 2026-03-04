@@ -90,7 +90,10 @@
                         </li>
                         <template x-for="cat in categories" :key="cat.id">
                             <li class="nav-item d-flex align-items-center">
-                                <a class="nav-link flex-grow-1" :class="selectedCategory === cat.id ? 'active fw-bold' : ''" href="#" @click="selectCategory(cat.id)" x-text="cat.name"></a>
+                                <a class="nav-link flex-grow-1" :class="selectedCategory === cat.id ? 'active fw-bold' : ''" href="#" @click="selectCategory(cat.id)">
+                                    <i class="bi bi-lightning-fill small me-1 text-warning" x-show="cat.query" :title="'Smart query: ' + cat.query"></i>
+                                    <span x-text="cat.name"></span>
+                                </a>
                                 <button class="btn btn-sm btn-link text-danger p-0 me-2" @click.stop="deleteCategory(cat.id)" title="Delete category"><i class="bi bi-x"></i></button>
                             </li>
                         </template>
