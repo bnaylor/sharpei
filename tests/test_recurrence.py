@@ -23,7 +23,7 @@ def test_daily_recurrence(ui_page):
     expect(task_item.locator(".bi-repeat")).to_be_visible()
     
     # 2. Complete the task
-    checkbox = task_item.locator("input[type='checkbox']")
+    checkbox = task_item.locator("input.toggle-completion")
     checkbox.click()
     
     # Wait for the UI to refresh (the backend should reset completion and move date)
@@ -50,14 +50,14 @@ def test_custom_days_recurrence(ui_page):
     task_item = ui_page.locator(".task-item:has-text('Three day task')")
     
     # Complete it
-    task_item.locator("input[type='checkbox']").click()
+    task_item.locator("input.toggle-completion").click()
     ui_page.wait_for_timeout(1000)
     
     # Should now be due in 3 days (displaying the date)
     expect(task_item.locator(".due-date")).to_contain_text(three_days_later.strftime("%-m/%-d/%Y"))
     
     # Complete it again
-    task_item.locator("input[type='checkbox']").click()
+    task_item.locator("input.toggle-completion").click()
     ui_page.wait_for_timeout(1000)
     
     # Should now be due in 6 days

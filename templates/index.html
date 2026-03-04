@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@15.0.6/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.3/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="/static/style.css">
     <script>
         // Initial theme set to avoid flash
@@ -159,7 +160,7 @@
                             <button class="btn btn-sm btn-outline-secondary" @click="prevMonth()"><i class="bi bi-chevron-left"></i></button>
                             <button class="btn btn-sm btn-outline-secondary" @click="goToToday()">Today</button>
                             <button class="btn btn-sm btn-outline-secondary" @click="nextMonth()"><i class="bi bi-chevron-right"></i></button>
-                            <span class="ms-2 fw-bold" x-text="monthName"></span>
+                            <span class="ms-2 fw-bold month-display" x-text="monthName"></span>
                         </div>
                     </template>
 
@@ -174,6 +175,9 @@
                     <button class="btn btn-sm" :class="showDetails ? 'btn-secondary' : 'btn-outline-secondary'" @click="toggleShowDetails()" title="Show details for all tasks (Ctrl+Shift+D)">
                         <i class="bi bi-card-text"></i>
                         <span x-text="showDetails ? 'Hide Details' : 'Show Details'"></span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @click="selectedTasks.length ? deselectAll() : selectAll()" :title="selectedTasks.length ? 'Deselect all' : 'Select all visible'">
+                        <i class="bi" :class="selectedTasks.length ? 'bi-check-square-fill' : 'bi-square'"></i>
                     </button>
                 </div>
 
@@ -193,10 +197,13 @@
                                 <template x-for="task in tasks.filter(t => t.priority == p)" :key="task.id">
                                     <div class="task-item-container" :data-id="task.id">
                                         <div class="task-item d-flex align-items-center p-2 border-bottom"
-                                             :class="{'text-muted': task.completed, 'archived': task.archived}"
+                                             :class="{'text-muted': task.completed, 'archived': task.archived, 'selected': selectedTasks.includes(task.id)}"
                                              :style="task.priority == 0 ? 'border-left: 4px solid #ea4335' : (task.priority == 2 ? 'border-left: 4px solid #4285f4' : 'border-left: 4px solid #34a853')">
+                                            <div class="d-flex align-items-center me-2">
+                                                <input class="form-check-input select-task" type="checkbox" :checked="selectedTasks.includes(task.id)" @click.stop="toggleSelect(task.id, $event)">
+                                            </div>
                                             <i class="bi bi-grip-vertical text-muted me-1 drag-handle"></i>
-                                            <input class="form-check-input me-2" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)">
+                                            <input class="form-check-input me-2 toggle-completion" type="checkbox" :checked="task.completed" @change.stop="toggleTask(task)">
                                             <span class="flex-grow-1 task-title" :class="task.completed ? 'text-decoration-line-through' : ''" x-text="task.title" @click="toggleExpand(task)"></span>
                                             <div class="task-meta d-flex align-items-center">
                                                 <template x-for="tag in task.tags_array">
@@ -319,6 +326,50 @@
             </main>
         </div>
     </div>
+
+    <!-- Bulk Action Bar -->
+    <div class="bulk-action-bar bg-primary text-white p-3 shadow-lg" x-show="selectedTasks.length > 0" x-transition x-cloak>
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <span class="fw-bold me-3"><span x-text="selectedTasks.length"></span> selected</span>
+                <button class="btn btn-sm btn-light me-2" @click="deselectAll()">Cancel</button>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+                <!-- Priority -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Priority
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" @click.prevent="applyBulkAction({priority: 0})">High</a></li>
+                        <li><a class="dropdown-item" href="#" @click.prevent="applyBulkAction({priority: 1})">Normal</a></li>
+                        <li><a class="dropdown-item" href="#" @click.prevent="applyBulkAction({priority: 2})">Low</a></li>
+                    </ul>
+                </div>
+
+                <!-- Category -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Move to...
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" @click.prevent="applyBulkAction({category_id: null})">No Category</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <template x-for="cat in categories" :key="cat.id">
+                            <li><a class="dropdown-item" href="#" @click.prevent="applyBulkAction({category_id: cat.id})" x-text="cat.name"></a></li>
+                        </template>
+                    </ul>
+                </div>
+
+                <button class="btn btn-sm btn-light" @click="applyBulkAction({completed: true})">Mark Done</button>
+                <button class="btn btn-sm btn-light" @click="applyBulkAction({completed: false})">Mark Pending</button>
+                <button class="btn btn-sm btn-light" @click="applyBulkAction({archived: true})">Archive</button>
+                <button class="btn btn-sm btn-danger" @click="bulkDelete()"><i class="bi bi-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

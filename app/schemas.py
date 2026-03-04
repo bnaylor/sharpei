@@ -6,6 +6,13 @@ from datetime import datetime
 class ReorderPayload(BaseModel):
     task_ids: List[int]
 
+class BulkUpdatePayload(BaseModel):
+    task_ids: List[int]
+    updates: dict
+
+class BulkDeletePayload(BaseModel):
+    task_ids: List[int]
+
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None

@@ -100,7 +100,7 @@ class TestTaskManagement:
         ui_page.wait_for_selector("text=Complete me")
 
         # Find the checkbox and click it
-        checkbox = ui_page.locator(".task-item:has-text('Complete me') input[type='checkbox']")
+        checkbox = ui_page.locator(".task-item:has-text('Complete me') input.toggle-completion")
         checkbox.click()
 
         # Verify the task is crossed out
@@ -115,7 +115,7 @@ class TestTaskManagement:
         input_field.press("Enter")
         ui_page.wait_for_selector("text=Toggle me")
 
-        checkbox = ui_page.locator(".task-item:has-text('Toggle me') input[type='checkbox']")
+        checkbox = ui_page.locator(".task-item:has-text('Toggle me') input.toggle-completion")
         checkbox.click()  # Complete
         ui_page.wait_for_timeout(300)
         checkbox.click()  # Uncomplete
@@ -407,7 +407,7 @@ class TestArchiving:
         input_field.press("Enter")
         ui_page.wait_for_selector("text=Archive me")
 
-        checkbox = ui_page.locator(".task-item:has-text('Archive me') input[type='checkbox']")
+        checkbox = ui_page.locator(".task-item:has-text('Archive me') input.toggle-completion")
         checkbox.click()
         ui_page.wait_for_timeout(300)
 
@@ -426,7 +426,7 @@ class TestArchiving:
         input_field.press("Enter")
         ui_page.wait_for_selector("text=Hidden task")
 
-        checkbox = ui_page.locator(".task-item:has-text('Hidden task') input[type='checkbox']")
+        checkbox = ui_page.locator(".task-item:has-text('Hidden task') input.toggle-completion")
         checkbox.click()
         ui_page.wait_for_timeout(300)
 
@@ -678,7 +678,7 @@ class TestBugFixes:
         expect(task_item.locator(".due-date")).to_have_class(re.compile(r"overdue"))
 
         # Complete the task
-        checkbox = task_item.locator("input[type='checkbox']")
+        checkbox = task_item.locator("input.toggle-completion")
         checkbox.click()
         ui_page.wait_for_timeout(300)
 

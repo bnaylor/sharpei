@@ -401,3 +401,20 @@ body {
 [data-theme="dark"] .calendar-day.today {
     background-color: rgba(66, 133, 244, 0.15);
 }
+
+/* Bulk Actions */
+.bulk-action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1040;
+}
+
+.task-item.selected {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+[data-theme="dark"] .task-item.selected {
+    background-color: rgba(13, 110, 253, 0.15);
+}

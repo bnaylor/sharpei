@@ -44,20 +44,20 @@ def test_calendar_navigation(ui_page):
     """Test navigating months in the calendar view."""
     ui_page.locator("button:has-text('Calendar')").click()
     
-    current_month_name = ui_page.locator("span.fw-bold").text_content()
+    current_month_name = ui_page.locator(".month-display").text_content()
     
     # Go to previous month
     ui_page.locator("button:has(i.bi-chevron-left)").click()
-    prev_month_name = ui_page.locator("span.fw-bold").text_content()
+    prev_month_name = ui_page.locator(".month-display").text_content()
     assert prev_month_name != current_month_name
     
     # Go to next month (back to original)
     ui_page.locator("button:has(i.bi-chevron-right)").click()
-    assert ui_page.locator("span.fw-bold").text_content() == current_month_name
+    assert ui_page.locator(".month-display").text_content() == current_month_name
     
     # Go to today
     ui_page.locator("button:has-text('Today')").click()
-    assert ui_page.locator("span.fw-bold").text_content() == current_month_name
+    assert ui_page.locator(".month-display").text_content() == current_month_name
 
 def test_task_appears_in_calendar(ui_page):
     """Test that a task with a due date appears in the calendar."""

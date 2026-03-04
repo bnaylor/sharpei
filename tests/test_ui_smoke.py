@@ -161,10 +161,10 @@ class TestUISmoke:
         task_item = ui_page.locator(".task-item:has-text('Rapid recurrence')")
         
         for _ in range(5):
-            checkbox = task_item.locator("input[type='checkbox']")
+            checkbox = task_item.locator("input.toggle-completion")
             checkbox.click()
             # Wait for the re-render where it's uncompleted again
-            ui_page.wait_for_selector(".task-item:has-text('Rapid recurrence') input[type='checkbox']:not(:checked)")
+            ui_page.wait_for_selector(".task-item:has-text('Rapid recurrence') input.toggle-completion:not(:checked)")
             ui_page.wait_for_timeout(100)
         
         # UI should still be alive

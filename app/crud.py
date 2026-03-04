@@ -206,6 +206,29 @@ def delete_task(db: Session, task_id: int):
         db.commit()
     return db_task
 
+def bulk_update_tasks(db: Session, task_ids: List[int], updates: dict):
+    """Update multiple tasks at once."""
+    if not task_ids:
+        return 0
+    
+    # Filter out updates that don't exist on the model
+    clean_updates = {k: v for k, v in updates.items() if hasattr(models.Task, k)}
+    if not clean_updates:
+        return 0
+
+    count = db.query(models.Task).filter(models.Task.id.in_(task_ids)).update(clean_updates, synchronize_session=False)
+    db.commit()
+    return count
+
+def bulk_delete_tasks(db: Session, task_ids: List[int]):
+    """Delete multiple tasks at once."""
+    if not task_ids:
+        return 0
+    
+    count = db.query(models.Task).filter(models.Task.id.in_(task_ids)).delete(synchronize_session=False)
+    db.commit()
+    return count
+
 def archive_completed_tasks(db: Session, category_id: Optional[int] = None):
     query = db.query(models.Task).filter(
         models.Task.completed == True,

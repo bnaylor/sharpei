@@ -16,6 +16,8 @@ function sharpei() {
         viewMode: 'list',
         currentMonth: new Date().getMonth(),
         currentYear: new Date().getFullYear(),
+        selectedTasks: [],
+        lastSelectedTaskId: null,
         darkMode: localStorage.getItem('darkMode') === 'true' || 
                  (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
         today: new Date().setHours(0, 0, 0, 0),
@@ -443,10 +445,85 @@ function sharpei() {
                         this.selectedCategory = null;
                         this.selectedCategoryName = 'All Tasks';
                     }
-                    this.fetchCategories();
-                    this.fetchTasks();
+                    this.fetchCategories().then(() => this.fetchTasks());
                 })
                 .catch(err => this.showError(err.message));
+        },
+
+        toggleSelect(taskId, event = null) {
+            if (event && event.shiftKey && this.lastSelectedTaskId !== null) {
+                // Range selection
+                const allVisibleIds = this.tasks.map(t => t.id);
+                const startIdx = allVisibleIds.indexOf(this.lastSelectedTaskId);
+                const endIdx = allVisibleIds.indexOf(taskId);
+
+                if (startIdx !== -1 && endIdx !== -1) {
+                    const min = Math.min(startIdx, endIdx);
+                    const max = Math.max(startIdx, endIdx);
+                    const rangeIds = allVisibleIds.slice(min, max + 1);
+
+                    rangeIds.forEach(id => {
+                        if (!this.selectedTasks.includes(id)) {
+                            this.selectedTasks.push(id);
+                        }
+                    });
+                }
+            } else {
+                const idx = this.selectedTasks.indexOf(taskId);
+                if (idx === -1) {
+                    this.selectedTasks.push(taskId);
+                } else {
+                    this.selectedTasks.splice(idx, 1);
+                }
+            }
+            this.lastSelectedTaskId = taskId;
+        },
+
+        selectAll() {
+            this.selectedTasks = this.tasks.map(t => t.id);
+        },
+
+        deselectAll() {
+            this.selectedTasks = [];
+            this.lastSelectedTaskId = null;
+        },
+
+        applyBulkAction(updates) {
+            if (this.selectedTasks.length === 0) return;
+
+            fetch('/api/tasks/bulk-update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task_ids: this.selectedTasks,
+                    updates: updates
+                })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Bulk update failed');
+                this.deselectAll();
+                this.fetchTasks();
+            })
+            .catch(err => this.showError(err.message));
+        },
+
+        bulkDelete() {
+            if (this.selectedTasks.length === 0) return;
+            if (!confirm(`Delete ${this.selectedTasks.length} selected tasks?`)) return;
+
+            fetch('/api/tasks/bulk-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task_ids: this.selectedTasks
+                })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Bulk delete failed');
+                this.deselectAll();
+                this.fetchTasks();
+            })
+            .catch(err => this.showError(err.message));
         },
 
         addTask() {

@@ -215,6 +215,16 @@ def reorder_tasks(payload: schemas.ReorderPayload, db: Session = Depends(get_db)
     crud.reorder_tasks(db, payload.task_ids)
     return {"message": "Reordered successfully"}
 
+@app.post("/api/tasks/bulk-update")
+def bulk_update_tasks(payload: schemas.BulkUpdatePayload, db: Session = Depends(get_db)):
+    count = crud.bulk_update_tasks(db, payload.task_ids, payload.updates)
+    return {"message": f"Updated {count} tasks"}
+
+@app.post("/api/tasks/bulk-delete")
+def bulk_delete_tasks(payload: schemas.BulkDeletePayload, db: Session = Depends(get_db)):
+    count = crud.bulk_delete_tasks(db, payload.task_ids)
+    return {"message": f"Deleted {count} tasks"}
+
 @app.post("/api/tasks", response_model=schemas.Task)
 def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     return crud.create_task(db, task)
