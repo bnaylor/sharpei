@@ -5,3 +5,4 @@ sharpei.db
 .DS_Store
 .mcp.json
 .claude/
+backups/*.db
