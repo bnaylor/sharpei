@@ -14,7 +14,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
 import json
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from mcp.server.fastmcp import FastMCP
 
@@ -51,6 +51,8 @@ def task_to_dict(task: Task) -> dict:
         "archived": task.archived,
         "category_id": task.category_id,
         "parent_id": task.parent_id,
+        "blocked_by_ids": task.blocked_by_ids,
+        "blocking_ids": task.blocking_ids,
         "subtasks": [task_to_dict(sub) for sub in task.subtasks] if task.subtasks else []
     }
 
@@ -174,7 +176,8 @@ def create_task(
     hashtags: Optional[str] = None,
     recurrence: Optional[str] = None,
     category_id: Optional[int] = None,
-    parent_id: Optional[int] = None
+    parent_id: Optional[int] = None,
+    blocked_by_ids: Optional[List[int]] = None
 ) -> str:
     """Create a new task.
 
@@ -187,6 +190,7 @@ def create_task(
         recurrence: Recurrence pattern (e.g., 'daily', 'weekly', 'monthly', '7d') (optional)
         category_id: Category ID to assign the task to (optional)
         parent_id: Parent task ID if this is a subtask (optional)
+        blocked_by_ids: IDs of tasks that block this task (optional)
 
     Returns:
         The created task with its ID
@@ -210,7 +214,8 @@ def create_task(
             hashtags=hashtags,
             recurrence=recurrence,
             category_id=category_id,
-            parent_id=parent_id
+            parent_id=parent_id,
+            blocked_by_ids=blocked_by_ids
         )
 
         task = crud.create_task(db, task_create)
@@ -230,7 +235,8 @@ def update_task(
     recurrence: Optional[str] = None,
     category_id: Optional[int] = None,
     completed: Optional[bool] = None,
-    archived: Optional[bool] = None
+    archived: Optional[bool] = None,
+    blocked_by_ids: Optional[List[int]] = None
 ) -> str:
     """Update an existing task.
 
@@ -247,6 +253,7 @@ def update_task(
         category_id: New category ID, or -1 to remove from category (optional)
         completed: Mark as completed or not (optional)
         archived: Mark as archived or not (optional)
+        blocked_by_ids: New IDs of tasks that block this task (optional)
 
     Returns:
         The updated task
@@ -282,6 +289,8 @@ def update_task(
                 update_data['archived'] = False
         if archived is not None:
             update_data['archived'] = archived
+        if blocked_by_ids is not None:
+            update_data['blocked_by_ids'] = blocked_by_ids
 
         if not update_data:
              # No updates

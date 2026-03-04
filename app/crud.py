@@ -27,6 +27,12 @@ def delete_category(db: Session, category_id: int):
         db.commit()
     return db_category
 
+def clear_all_data(db: Session):
+    """Delete all tasks and categories."""
+    db.query(models.Task).delete()
+    db.query(models.Category).delete()
+    db.commit()
+
 # Tasks
 def get_task(db: Session, task_id: int):
     return db.query(models.Task).filter(models.Task.id == task_id).first()
@@ -126,6 +132,9 @@ def get_tasks(
 
 def create_task(db: Session, task: schemas.TaskCreate):
     task_data = task.dict()
+    blocked_by_ids = task_data.pop('blocked_by_ids', None)
+    blocking_ids = task_data.pop('blocking_ids', None)
+    
     # Auto-assign position to end of list for this priority level
     max_pos = db.query(func.max(models.Task.position)).filter(
         models.Task.priority == task_data.get('priority', 1),
@@ -134,6 +143,11 @@ def create_task(db: Session, task: schemas.TaskCreate):
     task_data['position'] = (max_pos or 0) + 1
 
     db_task = models.Task(**task_data)
+    
+    if blocked_by_ids:
+        blockers = db.query(models.Task).filter(models.Task.id.in_(blocked_by_ids)).all()
+        db_task.blocked_by = blockers
+
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -149,6 +163,8 @@ def update_task(db: Session, task_id: int, task_update: Union[schemas.TaskCreate
     else:
         update_data = task_update.dict(exclude_unset=True)
     
+    blocked_by_ids = update_data.pop('blocked_by_ids', None)
+    
     for var, value in update_data.items():
         # Preserve existing position if not explicitly set
         if var == 'position' and value is None:
@@ -157,6 +173,10 @@ def update_task(db: Session, task_id: int, task_update: Union[schemas.TaskCreate
         if not hasattr(db_task, var):
             continue
         setattr(db_task, var, value)
+
+    if blocked_by_ids is not None:
+        blockers = db.query(models.Task).filter(models.Task.id.in_(blocked_by_ids)).all()
+        db_task.blocked_by = blockers
 
     # Handle recurring tasks
     if db_task.completed and db_task.recurrence and db_task.due_date:
@@ -192,6 +212,29 @@ def update_task(db: Session, task_id: int, task_update: Union[schemas.TaskCreate
     db.commit()
     db.refresh(db_task)
     return db_task
+
+def bulk_update_tasks(db: Session, task_ids: List[int], updates: dict):
+    """Update multiple tasks at once."""
+    if not task_ids:
+        return 0
+    
+    # Filter out updates that don't exist on the model
+    clean_updates = {k: v for k, v in updates.items() if hasattr(models.Task, k)}
+    if not clean_updates:
+        return 0
+
+    count = db.query(models.Task).filter(models.Task.id.in_(task_ids)).update(clean_updates, synchronize_session=False)
+    db.commit()
+    return count
+
+def bulk_delete_tasks(db: Session, task_ids: List[int]):
+    """Delete multiple tasks at once."""
+    if not task_ids:
+        return 0
+    
+    count = db.query(models.Task).filter(models.Task.id.in_(task_ids)).delete(synchronize_session=False)
+    db.commit()
+    return count
 
 def delete_task(db: Session, task_id: int):
     db_task = get_task(db, task_id)

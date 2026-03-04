@@ -6,6 +6,13 @@ from datetime import datetime
 class ReorderPayload(BaseModel):
     task_ids: List[int]
 
+class BulkUpdatePayload(BaseModel):
+    task_ids: List[int]
+    updates: dict
+
+class BulkDeletePayload(BaseModel):
+    task_ids: List[int]
+
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -18,6 +25,8 @@ class TaskBase(BaseModel):
     archived: bool = False
     category_id: Optional[int] = None
     parent_id: Optional[int] = None
+    blocked_by_ids: Optional[List[int]] = None
+    blocking_ids: Optional[List[int]] = None
 
 class TaskCreate(TaskBase):
     pass
@@ -29,10 +38,13 @@ class TaskUpdate(BaseModel):
     priority: Optional[int] = None
     position: Optional[int] = None
     hashtags: Optional[str] = None
+    recurrence: Optional[str] = None
     completed: Optional[bool] = None
     archived: Optional[bool] = None
     category_id: Optional[int] = None
     parent_id: Optional[int] = None
+    blocked_by_ids: Optional[List[int]] = None
+    blocking_ids: Optional[List[int]] = None
 
 class Task(TaskBase):
     id: int

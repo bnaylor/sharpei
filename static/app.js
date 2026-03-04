@@ -16,6 +16,9 @@ function sharpei() {
         viewMode: 'list',
         currentMonth: new Date().getMonth(),
         currentYear: new Date().getFullYear(),
+        selectedTasks: [],
+        lastSelectedTaskId: null,
+        bulkMode: false,
         darkMode: localStorage.getItem('darkMode') === 'true' || 
                  (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
         today: new Date().setHours(0, 0, 0, 0),
@@ -36,6 +39,58 @@ function sharpei() {
 
         closeSettings() {
             this.showSettings = false;
+        },
+
+        exportData() {
+            fetch('/api/data/export')
+                .then(res => {
+                    if (!res.ok) throw new Error('Export failed');
+                    return res.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `sharpei_export_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                })
+                .catch(err => this.showError(err.message));
+        },
+
+        importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!confirm('This will DELETE all current tasks and categories and replace them with the data from the file. Are you sure you want to proceed?')) {
+                event.target.value = '';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            this.loading = true;
+            fetch('/api/data/import', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => {
+                if (!res.ok) return res.json().then(err => { throw new Error(err.detail || 'Import failed'); });
+                return res.json();
+            })
+            .then(data => {
+                this.showSettings = false;
+                this.fetchCategories().then(() => this.fetchTasks());
+                alert('Data imported successfully!');
+            })
+            .catch(err => this.showError(err.message))
+            .finally(() => {
+                this.loading = false;
+                event.target.value = '';
+            });
         },
 
         parseQuickAdd(input) {
@@ -192,6 +247,7 @@ function sharpei() {
                 category_id: t.category_id !== null ? t.category_id.toString() : "",
                 tags_array: tags,
                 recurrence: t.recurrence || '',
+                blocked_by_ids: t.blocked_by_ids || [],
                 subtasks: (t.subtasks || []).map(sub => this.transformTask(sub))
             };
         },
@@ -391,10 +447,92 @@ function sharpei() {
                         this.selectedCategory = null;
                         this.selectedCategoryName = 'All Tasks';
                     }
-                    this.fetchCategories();
-                    this.fetchTasks();
+                    this.fetchCategories().then(() => this.fetchTasks());
                 })
                 .catch(err => this.showError(err.message));
+        },
+
+        toggleSelect(taskId, event = null) {
+            if (event && event.shiftKey && this.lastSelectedTaskId !== null) {
+                // Range selection
+                const allVisibleIds = this.tasks.map(t => t.id);
+                const startIdx = allVisibleIds.indexOf(this.lastSelectedTaskId);
+                const endIdx = allVisibleIds.indexOf(taskId);
+
+                if (startIdx !== -1 && endIdx !== -1) {
+                    const min = Math.min(startIdx, endIdx);
+                    const max = Math.max(startIdx, endIdx);
+                    const rangeIds = allVisibleIds.slice(min, max + 1);
+
+                    rangeIds.forEach(id => {
+                        if (!this.selectedTasks.includes(id)) {
+                            this.selectedTasks.push(id);
+                        }
+                    });
+                }
+            } else {
+                const idx = this.selectedTasks.indexOf(taskId);
+                if (idx === -1) {
+                    this.selectedTasks.push(taskId);
+                } else {
+                    this.selectedTasks.splice(idx, 1);
+                }
+            }
+            this.lastSelectedTaskId = taskId;
+        },
+
+        selectAll() {
+            this.selectedTasks = this.tasks.map(t => t.id);
+        },
+
+        deselectAll() {
+            this.selectedTasks = [];
+            this.lastSelectedTaskId = null;
+        },
+
+        toggleBulkMode() {
+            this.bulkMode = !this.bulkMode;
+            if (!this.bulkMode) {
+                this.deselectAll();
+            }
+        },
+
+        applyBulkAction(updates) {
+            if (this.selectedTasks.length === 0) return;
+
+            fetch('/api/tasks/bulk-update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task_ids: this.selectedTasks,
+                    updates: updates
+                })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Bulk update failed');
+                this.deselectAll();
+                this.fetchTasks();
+            })
+            .catch(err => this.showError(err.message));
+        },
+
+        bulkDelete() {
+            if (this.selectedTasks.length === 0) return;
+            if (!confirm(`Delete ${this.selectedTasks.length} selected tasks?`)) return;
+
+            fetch('/api/tasks/bulk-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task_ids: this.selectedTasks
+                })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Bulk delete failed');
+                this.deselectAll();
+                this.fetchTasks();
+            })
+            .catch(err => this.showError(err.message));
         },
 
         addTask() {
@@ -474,7 +612,9 @@ function sharpei() {
                 completed: task.completed,
                 archived: task.archived || false,
                 category_id: (task.category_id && task.category_id !== "") ? parseInt(task.category_id) : null,
-                parent_id: task.parent_id
+                parent_id: task.parent_id,
+                blocked_by_ids: Array.isArray(task.blocked_by_ids) ? task.blocked_by_ids : 
+                               (typeof task.blocked_by_ids === 'string' ? task.blocked_by_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id)) : [])
             };
 
             fetch(`/api/tasks/${task.id}`, {
@@ -546,6 +686,7 @@ function sharpei() {
                 category_id: task.category_id,
                 hashtags: task.hashtags ?? '',
                 recurrence: task.recurrence ?? '',
+                blocked_by_ids: JSON.stringify(task.blocked_by_ids || []),
             };
         },
 
@@ -558,7 +699,16 @@ function sharpei() {
                 || snap.priority !== task.priority
                 || snap.category_id !== task.category_id
                 || norm(snap.hashtags) !== norm(task.hashtags)
-                || norm(snap.recurrence) !== norm(task.recurrence);
+                || norm(snap.recurrence) !== norm(task.recurrence)
+                || snap.blocked_by_ids !== JSON.stringify(task.blocked_by_ids || []);
+        },
+
+        isBlocked(task) {
+            if (!task.blocked_by_ids || task.blocked_by_ids.length === 0) return false;
+            return task.blocked_by_ids.some(id => {
+                const blocker = this.tasks.find(t => t.id == id);
+                return blocker && !blocker.completed;
+            });
         },
 
         formatDate(dateStr, isCompleted = false) {
