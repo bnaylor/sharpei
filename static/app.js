@@ -41,6 +41,13 @@ function sharpei() {
             this.showSettings = false;
         },
 
+        copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // We could add a toast here, but for now simple console log
+                console.log('Copied to clipboard:', text);
+            }).catch(err => this.showError('Failed to copy to clipboard'));
+        },
+
         exportData() {
             fetch('/api/data/export')
                 .then(res => {

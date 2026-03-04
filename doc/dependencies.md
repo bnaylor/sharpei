@@ -7,6 +7,7 @@ Sharpei allows you to create dependencies between tasks. If Task B depends on Ta
 To link tasks, you need to know their unique **ID**. 
 
 -   Every task has an ID displayed with a `#` prefix in its row (e.g., `#123`), located next to the trash icon.
+-   **Pro Tip**: Click the ID to automatically copy it to your clipboard.
 -   These IDs are automatically assigned by the database and never change.
 
 ## Setting a Dependency
