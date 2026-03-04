@@ -95,6 +95,7 @@ pytest
 - [Search & Smart Filters](doc/search.md)
 - [Calendar View](doc/calendar.md)
 - [Bulk Actions](doc/bulk-actions.md)
+- [Task Dependencies](doc/dependencies.md)
 - [Data Portability & Backups](doc/data-portability.md)
 - [MCP Server](doc/mcp.md)
 - [Testing](doc/testing.md)
