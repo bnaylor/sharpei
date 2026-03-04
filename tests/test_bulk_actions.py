@@ -12,21 +12,24 @@ def test_multi_select_and_bulk_delete(ui_page):
         input_field.press("Enter")
         ui_page.wait_for_timeout(200)
 
-    # 2. Select two tasks
+    # 2. Enable Bulk Mode
+    ui_page.locator("button:has-text('Bulk Edit')").click()
+
+    # 3. Select two tasks
     ui_page.locator(".task-item:has-text('Bulk task 0')").locator("input.select-task").click()
     ui_page.locator(".task-item:has-text('Bulk task 1')").locator("input.select-task").click()
 
-    # 3. Bulk Action Bar should be visible
+    # 4. Bulk Action Bar should be visible
     bulk_bar = ui_page.locator(".bulk-action-bar")
     expect(bulk_bar).to_be_visible()
     expect(bulk_bar).to_contain_text("2 selected")
 
-    # 4. Bulk Delete
+    # 5. Bulk Delete
     ui_page.on("dialog", lambda dialog: dialog.accept()) # Confirm delete
     bulk_bar.locator("button:has-text('Delete')").click()
     ui_page.wait_for_timeout(500)
 
-    # 5. Verify tasks are gone
+    # 6. Verify tasks are gone
     expect(ui_page.locator(".task-item:has-text('Bulk task 0')")).to_be_hidden()
     expect(ui_page.locator(".task-item:has-text('Bulk task 1')")).to_be_hidden()
     expect(ui_page.locator(".task-item:has-text('Bulk task 2')")).to_be_visible()
@@ -41,14 +44,17 @@ def test_select_all_toggle(ui_page):
         input_field.press("Enter")
         ui_page.wait_for_timeout(200)
 
-    # 2. Click Select All
+    # 2. Enable Bulk Mode
+    ui_page.locator("button:has-text('Bulk Edit')").click()
+
+    # 3. Click Select All
     ui_page.locator("button[title='Select all visible']").click()
     
-    # 3. Verify all selected
+    # 4. Verify all selected
     bulk_bar = ui_page.locator(".bulk-action-bar")
     expect(bulk_bar).to_contain_text("3 selected")
     
-    # 4. Click Deselect All
+    # 5. Click Deselect All
     ui_page.locator("button[title='Deselect all']").click()
     expect(bulk_bar).to_be_hidden()
 
@@ -64,11 +70,14 @@ def test_bulk_priority_change(ui_page):
     input_field.press("Enter")
     ui_page.wait_for_selector(".task-item:has-text('Priority task 2')")
     
-    # 2. Select them
+    # 2. Enable Bulk Mode
+    ui_page.locator("button:has-text('Bulk Edit')").click()
+
+    # 3. Select them
     ui_page.locator(".task-item:has-text('Priority task 1')").locator("input.select-task").click()
     ui_page.locator(".task-item:has-text('Priority task 2')").locator("input.select-task").click()
 
-    # 3. Change to High Priority
+    # 4. Change to High Priority
     bulk_bar = ui_page.locator(".bulk-action-bar")
     bulk_bar.locator("button:has-text('Priority')").click()
     
@@ -78,7 +87,7 @@ def test_bulk_priority_change(ui_page):
     high_option.click()
     ui_page.wait_for_timeout(500)
 
-    # 4. Verify they are in High Priority group
+    # 5. Verify they are in High Priority group
     high_group = ui_page.locator(".priority-group:has-text('High Priority')")
     expect(high_group.locator(".task-item:has-text('Priority task 1')")).to_be_visible()
     expect(high_group.locator(".task-item:has-text('Priority task 2')")).to_be_visible()
@@ -92,12 +101,15 @@ def test_shift_click_range_selection(ui_page):
         input_field.press("Enter")
         ui_page.wait_for_timeout(100)
 
-    # 2. Click first task
+    # 2. Enable Bulk Mode
+    ui_page.locator("button:has-text('Bulk Edit')").click()
+
+    # 3. Click first task
     ui_page.locator(".task-item:has-text('Range task 0')").locator("input.select-task").click()
     
-    # 3. Shift+Click fifth task
+    # 4. Shift+Click fifth task
     ui_page.locator(".task-item:has-text('Range task 4')").locator("input.select-task").click(modifiers=["Shift"])
     
-    # 4. Verify all 5 are selected
+    # 5. Verify all 5 are selected
     bulk_bar = ui_page.locator(".bulk-action-bar")
     expect(bulk_bar).to_contain_text("5 selected")

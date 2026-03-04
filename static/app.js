@@ -18,6 +18,7 @@ function sharpei() {
         currentYear: new Date().getFullYear(),
         selectedTasks: [],
         lastSelectedTaskId: null,
+        bulkMode: false,
         darkMode: localStorage.getItem('darkMode') === 'true' || 
                  (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
         today: new Date().setHours(0, 0, 0, 0),
@@ -486,6 +487,13 @@ function sharpei() {
         deselectAll() {
             this.selectedTasks = [];
             this.lastSelectedTaskId = null;
+        },
+
+        toggleBulkMode() {
+            this.bulkMode = !this.bulkMode;
+            if (!this.bulkMode) {
+                this.deselectAll();
+            }
         },
 
         applyBulkAction(updates) {

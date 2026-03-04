@@ -176,7 +176,11 @@
                         <i class="bi bi-card-text"></i>
                         <span x-text="showDetails ? 'Hide Details' : 'Show Details'"></span>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary" @click="selectedTasks.length ? deselectAll() : selectAll()" :title="selectedTasks.length ? 'Deselect all' : 'Select all visible'">
+                    <button class="btn btn-sm" :class="bulkMode ? 'btn-secondary' : 'btn-outline-secondary'" @click="toggleBulkMode()" title="Toggle bulk actions">
+                        <i class="bi bi-check2-square"></i>
+                        <span x-text="bulkMode ? 'Exit Bulk Edit' : 'Bulk Edit'"></span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" x-show="bulkMode" @click="selectedTasks.length ? deselectAll() : selectAll()" :title="selectedTasks.length ? 'Deselect all' : 'Select all visible'" x-cloak>
                         <i class="bi" :class="selectedTasks.length ? 'bi-check-square-fill' : 'bi-square'"></i>
                     </button>
                 </div>
@@ -199,7 +203,7 @@
                                         <div class="task-item d-flex align-items-center p-2 border-bottom"
                                              :class="{'text-muted': task.completed, 'archived': task.archived, 'selected': selectedTasks.includes(task.id)}"
                                              :style="task.priority == 0 ? 'border-left: 4px solid #ea4335' : (task.priority == 2 ? 'border-left: 4px solid #4285f4' : 'border-left: 4px solid #34a853')">
-                                            <div class="d-flex align-items-center me-2">
+                                            <div class="d-flex align-items-center me-2" x-show="bulkMode" x-cloak>
                                                 <input class="form-check-input select-task" type="checkbox" :checked="selectedTasks.includes(task.id)" @click.stop="toggleSelect(task.id, $event)">
                                             </div>
                                             <i class="bi bi-grip-vertical text-muted me-1 drag-handle"></i>
