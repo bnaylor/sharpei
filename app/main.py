@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -67,6 +67,14 @@ def check_and_trigger_backup(background_tasks: BackgroundTasks):
 @app.get("/")
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/manifest.json")
+def get_manifest():
+    return FileResponse("static/manifest.json")
+
+@app.get("/service-worker.js")
+def get_service_worker():
+    return FileResponse("static/service-worker.js")
 
 # Data Portability
 @app.get("/api/data/export")

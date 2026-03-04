@@ -1,0 +1,16 @@
+{
+  "name": "Sharpei TODO",
+  "short_name": "Sharpei",
+  "description": "A focused, local-first TODO application.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4285f4",
+  "icons": [
+    {
+      "src": "/assets/icon_large.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
