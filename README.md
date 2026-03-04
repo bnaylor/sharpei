@@ -97,13 +97,13 @@ See [doc/mcp.md](doc/mcp.md) for available tools and full documentation.
 ## Testing
 
 ```bash
-# Run all tests (83 total)
+# Run all tests (118 total)
 pytest
 
 # Run specific test suites
-pytest tests/test_api.py      # API tests (28)
-pytest tests/test_mcp_server.py  # MCP tests (25)
-pytest tests/test_ui.py       # UI tests (30)
+pytest tests/test_api.py      # API tests (36)
+pytest tests/test_mcp_server.py  # MCP tests (30)
+pytest tests/test_ui.py       # UI tests (39)
 ```
 
 See [doc/testing.md](doc/testing.md) for testing documentation.
@@ -117,6 +117,8 @@ See [doc/testing.md](doc/testing.md) for testing documentation.
 ## Documentation
 
 - [Quick-Add Syntax](doc/quick-add.md)
+- [Search & Smart Filters](doc/search.md)
+- [Calendar View](doc/calendar.md)
 - [MCP Server](doc/mcp.md)
 - [Testing](doc/testing.md)
 

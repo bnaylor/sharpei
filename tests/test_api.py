@@ -265,6 +265,80 @@ class TestTaskFiltering:
 
         assert len(response.json()) == 1
 
+    def test_smart_search_priority(self, api_client):
+        """Test smart search by priority."""
+        api_client.post("/api/tasks", json={"title": "High task", "priority": 0})
+        api_client.post("/api/tasks", json={"title": "Normal task", "priority": 1})
+
+        # Search by priority:high
+        resp = api_client.get("/api/tasks", params={"q": "priority:high"})
+        tasks = resp.json()
+        assert len(tasks) == 1
+        assert tasks[0]["title"] == "High task"
+
+        # Search by p:1
+        resp = api_client.get("/api/tasks", params={"q": "p:1"})
+        tasks = resp.json()
+        assert len(tasks) == 1
+        assert tasks[0]["title"] == "Normal task"
+
+    def test_smart_search_is_completed(self, api_client):
+        """Test smart search by completion status."""
+        t1 = api_client.post("/api/tasks", json={"title": "Done"}).json()
+        api_client.put(f"/api/tasks/{t1['id']}", json={"title": "Done", "completed": True})
+        api_client.post("/api/tasks", json={"title": "Pending"})
+
+        # Search is:completed
+        resp = api_client.get("/api/tasks", params={"q": "is:completed"})
+        assert len(resp.json()) == 1
+        assert resp.json()[0]["title"] == "Done"
+
+        # Search is:pending
+        resp = api_client.get("/api/tasks", params={"q": "is:pending"})
+        assert len(resp.json()) == 1
+        assert resp.json()[0]["title"] == "Pending"
+
+    def test_smart_search_has_due(self, api_client):
+        """Test smart search for tasks with due dates."""
+        api_client.post("/api/tasks", json={"title": "Due task", "due_date": "2025-12-31T12:00:00"})
+        api_client.post("/api/tasks", json={"title": "No due"})
+
+        resp = api_client.get("/api/tasks", params={"q": "has:due"})
+        assert len(resp.json()) == 1
+        assert resp.json()[0]["title"] == "Due task"
+
+    def test_smart_search_combined(self, api_client):
+        """Test combined smart search tokens."""
+        api_client.post("/api/tasks", json={"title": "Urgent mail", "priority": 0})
+        api_client.post("/api/tasks", json={"title": "Urgent meeting", "priority": 1})
+
+        # Combined text and priority
+        resp = api_client.get("/api/tasks", params={"q": "urgent priority:high"})
+        assert len(resp.json()) == 1
+        assert resp.json()[0]["title"] == "Urgent mail"
+
+    def test_smart_category(self, api_client):
+        """Test that smart categories correctly filter tasks."""
+        # Create a normal task and an overdue task
+        api_client.post("/api/tasks", json={"title": "Pending task"})
+        # We can't easily create an overdue task via API without forcing due_date in past
+        # Let's use priority instead for the test
+        api_client.post("/api/tasks", json={"title": "High priority task", "priority": 0})
+
+        # Create a smart category for high priority
+        cat_resp = api_client.post("/api/categories", json={
+            "name": "High Priority",
+            "query": "priority:high"
+        })
+        cat_id = cat_resp.json()["id"]
+
+        # Fetch tasks for this category
+        resp = api_client.get("/api/tasks", params={"category_id": cat_id})
+        tasks = resp.json()
+        
+        assert len(tasks) == 1
+        assert tasks[0]["title"] == "High priority task"
+
 
 class TestTaskReordering:
     """Test task reordering endpoint."""

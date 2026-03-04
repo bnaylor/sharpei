@@ -59,7 +59,8 @@ def category_to_dict(category: Category) -> dict:
     """Convert a Category object to a dictionary."""
     return {
         "id": category.id,
-        "name": category.name
+        "name": category.name,
+        "query": category.query
     }
 
 
@@ -78,18 +79,19 @@ def list_categories() -> str:
 
 
 @mcp.tool()
-def create_category(name: str) -> str:
+def create_category(name: str, query: Optional[str] = None) -> str:
     """Create a new task category.
 
     Args:
-        name: The name for the new category
+        name: The name for the new category (required)
+        query: Search query for smart categories (optional)
 
     Returns:
         The created category with its ID
     """
     db = get_db()
     try:
-        category = crud.create_category(db, schemas.CategoryCreate(name=name))
+        category = crud.create_category(db, schemas.CategoryCreate(name=name, query=query))
         return json.dumps(category_to_dict(category), indent=2)
     finally:
         db.close()

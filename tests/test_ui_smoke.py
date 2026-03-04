@@ -91,6 +91,37 @@ class TestUISmoke:
         ui_page.locator("a.nav-link:has-text('All Tasks')").click()
         expect(ui_page.locator("h1.h2")).to_contain_text("All Tasks")
 
+    def test_smart_category_smoke(self, ui_page):
+        """Ensure smart categories filter tasks and show the lightning icon."""
+        # 1. Add a high priority task
+        input_field = ui_page.locator("input[placeholder='Add a task...']")
+        input_field.fill("Crucial task !high")
+        input_field.press("Enter")
+        ui_page.wait_for_timeout(500)
+
+        # 2. Add a normal task
+        input_field.fill("Meh task")
+        input_field.press("Enter")
+        ui_page.wait_for_timeout(500)
+
+        # 3. Create a smart category
+        cat_input = ui_page.locator("input[placeholder='New category']")
+        cat_input.fill("High Only [priority:high]")
+        cat_input.press("Enter")
+        ui_page.wait_for_timeout(500)
+
+        # 4. Verify lightning icon is visible
+        cat_link = ui_page.locator("a.nav-link:has-text('High Only')")
+        expect(cat_link.locator("i.bi-lightning-fill")).to_be_visible()
+
+        # 5. Click the smart category
+        cat_link.click()
+        ui_page.wait_for_timeout(500)
+
+        # 6. Verify only the high priority task is visible
+        expect(ui_page.locator(".task-item:has-text('Crucial task')")).to_be_visible()
+        expect(ui_page.locator(".task-item:has-text('Meh task')")).to_be_hidden()
+
     def test_subtask_rendering_smoke(self, ui_page):
         """Ensure subtasks render correctly and don't break the list."""
         input_field = ui_page.locator("input[placeholder='Add a task...']")
