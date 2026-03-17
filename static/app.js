@@ -10,6 +10,8 @@ function sharpei() {
         searchQuery: '',
         loading: false,
         error: null,
+        serverError: false,
+        isTest: false,
         showArchived: false,
         showDetails: false,
         showSettings: false,
@@ -24,6 +26,16 @@ function sharpei() {
                  (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
         today: new Date().setHours(0, 0, 0, 0),
         taskSnapshots: {},
+
+        checkConnection() {
+            return fetch('/api/categories')
+                .then(res => {
+                    this.serverError = !res.ok;
+                })
+                .catch(err => {
+                    this.serverError = true;
+                });
+        },
 
         showError(message) {
             this.error = message;
@@ -208,9 +220,8 @@ function sharpei() {
         },
 
         init() {
-            this.fetchCategories().then(() => {
-                this.fetchTasks();
-            });
+            this.fetchCategories();
+            this.fetchTasks();
 
             // Timer to notice when the day has flipped
             setInterval(() => {
@@ -240,9 +251,20 @@ function sharpei() {
 
         fetchCategories() {
             return fetch('/api/categories')
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to load categories');
+                    return res.json();
+                })
                 .then(data => {
                     this.categories = data;
+                    this.serverError = false;
+                })
+                .catch(err => {
+                    console.error('Category fetch error:', err);
+                    if (!this.isTest) {
+                        this.serverError = true;
+                    }
+                    this.showError(err.message);
                 });
         },
 
@@ -286,8 +308,15 @@ function sharpei() {
                 })
                 .then(data => {
                     this.tasks = data.map(t => this.transformTask(t));
+                    this.serverError = false;
                 })
-                .catch(err => this.showError(err.message))
+                .catch(err => {
+                    console.error('Task fetch error:', err);
+                    if (!this.isTest) {
+                        this.serverError = true;
+                    }
+                    this.showError(err.message);
+                })
                 .finally(() => this.loading = false);
         },
 

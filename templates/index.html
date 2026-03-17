@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sharpei - TODO</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4285f4">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="/static/app.js" defer></script>
@@ -39,6 +41,20 @@
             </button>
         </div>
     </header>
+
+    <!-- Server Error Overlay -->
+    <div class="server-error-overlay" x-show="serverError" :class="serverError ? 'active' : ''" x-cloak data-testid="server-error-overlay">
+        <div class="server-error-card text-center p-4 shadow-lg rounded">
+            <i class="bi bi-wifi-off fs-1 text-danger mb-3"></i>
+            <h3>Server Unreachable</h3>
+            <p class="text-muted mb-4">The Sharpei server is not responding. Please ensure the backend is running and try again.</p>
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" @click="fetchCategories().then(() => fetchTasks())">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Retry Connection
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Settings Panel -->
     <div class="settings-overlay" x-show="showSettings" x-cloak @click.self="closeSettings()">
@@ -387,5 +403,14 @@
             </div>
         </div>
     </div>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service worker registered'))
+                    .catch(err => console.log('Service worker registration failed', err));
+            });
+        }
+    </script>
 </body>
 </html>

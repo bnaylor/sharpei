@@ -118,13 +118,16 @@ def live_server(test_db, monkeypatch):
     server_thread.start()
 
     # Wait for server to be ready
-    for _ in range(20):
+    for _ in range(50):  # Increased from 20 to 50
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(0.1)
                 s.connect((host, port))
                 break
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, socket.timeout):
             time.sleep(0.1)
+    else:
+        pytest.fail("Server failed to start")
 
     yield f"http://{host}:{port}"
 
@@ -137,4 +140,6 @@ def ui_page(live_server, page):
     page.goto(live_server)
     # Wait for Alpine.js to initialize
     page.wait_for_selector("[x-data]")
+    # Set isTest to true to prevent server error overlay from appearing during tests
+    page.evaluate("Alpine.$data(document.querySelector('[x-data]')).isTest = true")
     return page

@@ -447,3 +447,42 @@ body {
     from { opacity: 1; transform: translate(-50%, 0); }
     to { opacity: 0; transform: translate(-50%, -5px); }
 }
+
+/* Server Error Overlay */
+.server-error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(8px);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 20000 !important;
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.server-error-overlay.active {
+    pointer-events: all;
+    visibility: visible;
+    opacity: 1;
+}
+
+.server-error-card {
+    background: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    max-width: 450px;
+    width: 90%;
+    padding: 2.5rem !important;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,0.5) !important;
+}
+
+.server-error-card i {
+    display: block;
+}
