@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, Request, Response, BackgroundTasks, UploadFile, File
 from fastapi.responses import JSONResponse, FileResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -17,6 +18,21 @@ from .database import engine, get_db, DB_PATH
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Sharpei")
+
+class APIKeyMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        api_key = os.getenv("SHARPEI_API_KEY")
+        # Only enforce on /api requests if an API Key is set in env
+        if api_key and request.url.path.startswith("/api"):
+            header_key = request.headers.get("X-API-Key")
+            if header_key != api_key:
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Unauthorized: Invalid or missing API Key"}
+                )
+        return await call_next(request)
+
+app.add_middleware(APIKeyMiddleware)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
