@@ -44,6 +44,38 @@ python sharpei.py
 
 The app opens automatically at http://127.0.0.1:8000
 
+## Remote Hosting
+
+Sharpei is designed for local-first use, but you can also host the backend on a remote server and connect to it from any browser or PWA. Local-first remains the default.
+
+### Running the Backend for Remote Access
+
+To allow remote connections, start the backend with the `--host` and `--api-key` arguments:
+
+```bash
+python sharpei.py --host 0.0.0.0 --api-key YOUR_SECRET_KEY
+```
+
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `--host` | Interface to bind to (`0.0.0.0` for all) | `127.0.0.1` |
+| `--port` | Port number to listen on | `8000` |
+| `--api-key` | Secret key required for API access | None |
+| `--ssl-cert` | Path to SSL certificate (for HTTPS) | None |
+| `--ssl-key` | Path to SSL key (for HTTPS) | None |
+| `--no-browser` | Skip opening the browser on startup | `false` |
+
+### Connecting from the UI
+
+1. Open the Sharpei UI.
+2. Click the **Settings** (gear icon) in the top right corner.
+3. Under **Remote Backend**:
+   - Enter your **Remote API URL** (e.g., `https://sharpei.example.com:8000`).
+   - Enter your **API Key**.
+4. Click **Save Settings**.
+
+The UI will now use the remote backend for all operations. This configuration is saved in your browser's local storage.
+
 ## Quick-Add Syntax
 
 Create tasks rapidly from the input field:
