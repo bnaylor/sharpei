@@ -26,6 +26,8 @@ function sharpei() {
                  (localStorage.getItem('darkMode') === null && window.matchMedia('(prefers-color-scheme: dark)').matches),
         today: new Date().setHours(0, 0, 0, 0),
         taskSnapshots: {},
+        remoteApiUrl: localStorage.getItem('remoteApiUrl') || '',
+        apiKey: localStorage.getItem('apiKey') || '',
 
         checkConnection() {
             return fetch('/api/categories')
@@ -44,6 +46,16 @@ function sharpei() {
 
         toggleDarkMode() {
             localStorage.setItem('darkMode', this.darkMode);
+        },
+
+        saveSettings() {
+            localStorage.setItem('remoteApiUrl', this.remoteApiUrl);
+            localStorage.setItem('apiKey', this.apiKey);
+            localStorage.setItem('darkMode', this.darkMode);
+            this.closeSettings();
+            this.checkConnection().then(() => {
+                this.fetchCategories().then(() => this.fetchTasks());
+            });
         },
 
         openSettings() {
