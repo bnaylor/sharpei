@@ -7,6 +7,19 @@ import os
 # This test will fail on import or when calling main.
 
 class TestCLI(unittest.TestCase):
+    def setUp(self):
+        # Save original env
+        self.original_api_key = os.environ.get("SHARPEI_API_KEY")
+        if "SHARPEI_API_KEY" in os.environ:
+            del os.environ["SHARPEI_API_KEY"]
+
+    def tearDown(self):
+        # Restore original env
+        if self.original_api_key:
+            os.environ["SHARPEI_API_KEY"] = self.original_api_key
+        elif "SHARPEI_API_KEY" in os.environ:
+            del os.environ["SHARPEI_API_KEY"]
+
     @patch("uvicorn.run")
     @patch("threading.Thread")
     @patch("sharpei.open_browser")
