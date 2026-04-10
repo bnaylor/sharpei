@@ -89,6 +89,22 @@
                 </p>
             </div>
 
+            <div class="settings-section mb-4">
+                <h5>Remote Backend</h5>
+                <p class="small text-muted mb-3">Connect to a remote Sharpei instance.</p>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold mb-1">Remote API URL (optional)</label>
+                    <input type="text" x-model="remoteApiUrl" placeholder="https://your-server:8000" 
+                           class="form-control form-control-sm">
+                    <div class="form-text mt-1" style="font-size: 0.75rem;">Leave empty to use current host.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold mb-1">API Key (optional)</label>
+                    <input type="password" x-model="apiKey" placeholder="Your secret key" 
+                           class="form-control form-control-sm">
+                </div>
+            </div>
+
             <div class="settings-section">
                 <h5>About</h5>
                 <p class="small text-muted">Sharpei - A sharp todo list.</p>
