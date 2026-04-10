@@ -29,8 +29,28 @@ function sharpei() {
         remoteApiUrl: localStorage.getItem('remoteApiUrl') || '',
         apiKey: localStorage.getItem('apiKey') || '',
 
+        async request(path, options = {}) {
+            if (!path.startsWith('/')) path = '/' + path;
+            const baseUrl = this.remoteApiUrl ? this.remoteApiUrl.replace(/\/$/, '') : '';
+            const url = baseUrl + path;
+            const headers = options.headers || {};
+            if (this.apiKey) {
+                headers['X-API-Key'] = this.apiKey;
+            }
+            const finalOptions = {
+                ...options,
+                headers: headers
+            };
+            const response = await fetch(url, finalOptions);
+            if (response.status === 401) {
+                this.showError('Authentication failed. Check your API Key.');
+                this.serverError = true;
+            }
+            return response;
+        },
+
         checkConnection() {
-            return fetch('/api/categories')
+            return this.request('/api/categories')
                 .then(res => {
                     this.serverError = !res.ok;
                 })
@@ -81,7 +101,7 @@ function sharpei() {
         },
 
         exportData() {
-            fetch('/api/data/export')
+            this.request('/api/data/export')
                 .then(res => {
                     if (!res.ok) throw new Error('Export failed');
                     return res.blob();
@@ -112,7 +132,7 @@ function sharpei() {
             formData.append('file', file);
 
             this.loading = true;
-            fetch('/api/data/import', {
+            this.request('/api/data/import', {
                 method: 'POST',
                 body: formData
             })
@@ -262,7 +282,7 @@ function sharpei() {
         },
 
         fetchCategories() {
-            return fetch('/api/categories')
+            return this.request('/api/categories')
                 .then(res => {
                     if (!res.ok) throw new Error('Failed to load categories');
                     return res.json();
@@ -313,7 +333,7 @@ function sharpei() {
                 url += `show_archived=true`;
             }
             this.loading = true;
-            fetch(url)
+            this.request(url)
                 .then(res => {
                     if (!res.ok) throw new Error('Failed to load tasks');
                     return res.json();
@@ -437,7 +457,7 @@ function sharpei() {
                     const newPriority = parseInt(toList.id.replace('list-p', ''));
                     const taskIds = Array.from(toList.querySelectorAll('.task-item-container')).map(item => item.getAttribute('data-id'));
                     
-                    fetch('/api/tasks/reorder', {
+                    this.request('/api/tasks/reorder', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ task_ids: taskIds })
@@ -481,7 +501,7 @@ function sharpei() {
                 query = match[2].trim();
             }
 
-            fetch('/api/categories', {
+            this.request('/api/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, query })
@@ -496,7 +516,7 @@ function sharpei() {
 
         deleteCategory(id) {
             if (!confirm('Delete this category? Tasks will be moved to "No Category".')) return;
-            fetch(`/api/categories/${id}`, { method: 'DELETE' })
+            this.request(`/api/categories/${id}`, { method: 'DELETE' })
                 .then(res => {
                     if (!res.ok) throw new Error('Failed to delete category');
                     if (this.selectedCategory === id) {
@@ -556,7 +576,7 @@ function sharpei() {
         applyBulkAction(updates) {
             if (this.selectedTasks.length === 0) return;
 
-            fetch('/api/tasks/bulk-update', {
+            this.request('/api/tasks/bulk-update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -576,7 +596,7 @@ function sharpei() {
             if (this.selectedTasks.length === 0) return;
             if (!confirm(`Delete ${this.selectedTasks.length} selected tasks?`)) return;
 
-            fetch('/api/tasks/bulk-delete', {
+            this.request('/api/tasks/bulk-delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -615,7 +635,7 @@ function sharpei() {
                 recurrence: parsed.recurrence
             };
 
-            fetch('/api/tasks', {
+            this.request('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -630,7 +650,7 @@ function sharpei() {
 
         addSubtask(parentTask) {
             if (!parentTask.newSubtaskTitle.trim()) return;
-            fetch('/api/tasks', {
+            this.request('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -673,7 +693,7 @@ function sharpei() {
                                (typeof task.blocked_by_ids === 'string' ? task.blocked_by_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id)) : [])
             };
 
-            fetch(`/api/tasks/${task.id}`, {
+            this.request(`/api/tasks/${task.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -690,7 +710,7 @@ function sharpei() {
 
         deleteTask(id) {
             if (confirm('Delete this task?')) {
-                fetch(`/api/tasks/${id}`, { method: 'DELETE' })
+                this.request(`/api/tasks/${id}`, { method: 'DELETE' })
                     .then(res => {
                         if (!res.ok) throw new Error('Failed to delete task');
                         this.fetchTasks();
@@ -704,7 +724,7 @@ function sharpei() {
             if (this.selectedCategory) {
                 url += `?category_id=${this.selectedCategory}`;
             }
-            fetch(url, { method: 'POST' })
+            this.request(url, { method: 'POST' })
                 .then(res => {
                     if (!res.ok) throw new Error('Failed to archive tasks');
                     return res.json();
