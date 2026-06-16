@@ -28,11 +28,13 @@ function sharpei() {
         taskSnapshots: {},
         remoteApiUrl: localStorage.getItem('remoteApiUrl') || '',
         apiKey: localStorage.getItem('apiKey') || '',
+        connectionTarget: '',
 
         async request(path, options = {}) {
             if (!path.startsWith('/')) path = '/' + path;
-            const baseUrl = this.remoteApiUrl ? this.remoteApiUrl.replace(/\/$/, '') : '';
-            const url = baseUrl + path;
+            const baseUrl = this.remoteApiUrl ? this.remoteApiUrl.replace(/\/$/, '') : window.location.origin;
+            const url = this.remoteApiUrl ? baseUrl + path : path;
+            this.connectionTarget = baseUrl + path;
             const headers = options.headers || {};
             if (this.apiKey) {
                 headers['X-API-Key'] = this.apiKey;

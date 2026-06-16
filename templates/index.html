@@ -44,16 +44,60 @@
 
     <!-- Server Error Overlay -->
     <div class="server-error-overlay" x-show="serverError" :class="serverError ? 'active' : ''" x-cloak data-testid="server-error-overlay">
-        <div class="server-error-card text-center p-4 shadow-lg rounded">
+        <div class="server-error-card text-center p-4 shadow-lg rounded" style="max-height: 90vh; overflow-y: auto;">
             <i class="bi bi-wifi-off fs-1 text-danger mb-3"></i>
-            <h3>Server Unreachable</h3>
-            <p class="text-muted mb-4">The Sharpei server is not responding. Please ensure the backend is running and try again.</p>
-            <div class="d-grid gap-2">
-                <button class="btn btn-primary" @click="fetchCategories().then(() => fetchTasks())">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Retry Connection
-                </button>
-                <button class="btn btn-outline-secondary mt-2" @click="openSettings()">
-                    <i class="bi bi-gear-fill me-1"></i> Connection Settings
+            <h3 class="fw-bold">Server Unreachable</h3>
+            <p class="text-muted mb-3">The Sharpei server is not responding. Please verify your connection settings.</p>
+            
+            <!-- Attempted Address -->
+            <div class="alert alert-secondary text-start p-2 mb-3" style="font-size: 0.8rem; background: var(--bg-light); border-color: var(--border-color); border-radius: 6px;">
+                <div class="fw-bold mb-1 text-muted d-flex justify-content-between align-items-center">
+                    <span>Attempted URL:</span>
+                    <button class="btn btn-link p-0 text-muted" style="font-size: 0.75rem; border: none; background: none;" @click="copyToClipboard(connectionTarget || (remoteApiUrl ? remoteApiUrl.replace(/\/$/, '') : window.location.origin) + '/api/categories')">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+                <code class="text-break" style="font-size: 0.75rem; color: var(--text-color);" x-text="connectionTarget || (remoteApiUrl ? remoteApiUrl.replace(/\/$/, '') : window.location.origin) + '/api/categories'"></code>
+            </div>
+
+            <!-- Connection Form -->
+            <div class="text-start border-top pt-3 mb-3">
+                <h6 class="fw-bold mb-2">Configure Connection</h6>
+                <div class="mb-2">
+                    <label class="form-label small fw-semibold mb-1 text-muted">Remote API URL (optional)</label>
+                    <input type="text" x-model="remoteApiUrl" placeholder="https://your-server:8000" 
+                           class="form-control form-control-sm">
+                    <div class="form-text mt-1 text-muted" style="font-size: 0.7rem;">Leave empty to use the local server.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold mb-1 text-muted">API Key (optional)</label>
+                    <input type="password" x-model="apiKey" placeholder="Your secret key" 
+                           class="form-control form-control-sm">
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success btn-sm" @click="saveSettings()">
+                        <i class="bi bi-check-lg me-1"></i> Save &amp; Retry
+                    </button>
+                </div>
+            </div>
+
+            <!-- Configuration Helper -->
+            <details class="text-start border-top pt-2">
+                <summary class="text-muted small" style="font-size: 0.75rem; cursor: pointer; outline: none;">
+                    Server Configuration Help
+                </summary>
+                <div class="mt-2 p-2 rounded bg-dark text-light" style="font-size: 0.7rem; font-family: monospace; line-height: 1.4;">
+                    <div class="text-info mb-1"># Env Variables (Server side)</div>
+                    SHARPEI_DB_PATH=/path/to/sharpei.db<br>
+                    SHARPEI_API_KEY=your-secret-key<br><br>
+                    <div class="text-info mb-1"># Startup Command</div>
+                    python sharpei.py --host 0.0.0.0 --port 8000 --api-key your-secret-key
+                </div>
+            </details>
+
+            <div class="mt-3 d-grid">
+                <button class="btn btn-outline-secondary btn-sm" @click="fetchCategories().then(() => fetchTasks())">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Simple Retry
                 </button>
             </div>
         </div>
