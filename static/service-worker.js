@@ -13,9 +13,26 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Force the waiting service worker to become the active service worker immediately
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(ASSETS))
+  );
+});
+
+self.addEventListener('activate', event => {
+  // Clear old caches that don't match the current CACHE_NAME
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('ServiceWorker: Clearing old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim()) // Take control of all pages immediately
   );
 });
 
@@ -26,7 +43,8 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    caches.match(event.request)
+    caches.open(CACHE_NAME)
+      .then(cache => cache.match(event.request))
       .then(response => response || fetch(event.request))
       .catch(() => {
         // Fallback or just let it fail gracefully
