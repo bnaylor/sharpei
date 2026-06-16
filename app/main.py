@@ -82,7 +82,7 @@ def check_and_trigger_backup(background_tasks: BackgroundTasks):
 
 @app.get("/")
 def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="index.html")
 
 @app.get("/manifest.json")
 def get_manifest():

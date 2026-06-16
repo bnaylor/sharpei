@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sharpei-v1';
+const CACHE_NAME = 'sharpei-v2';
 const ASSETS = [
   '/',
   '/static/app.js',

@@ -1,0 +1,13 @@
+.git/
+.claude/
+.gemini/
+backups/
+doc/
+docs/
+tests/
+*.db
+*.md
+.gitignore
+.python-version
+pytest.ini
+mcp_server.py
