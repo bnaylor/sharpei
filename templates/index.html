@@ -338,6 +338,12 @@
                                         <!-- Expanded Task Details -->
                                         <div class="task-details p-3 border-start border-end" x-show="expandedTasks.includes(task.id)">
                                             <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <label class="small text-muted">Title</label>
+                                                    <input type="text" class="form-control form-control-sm" x-model="task.title" placeholder="Task title...">
+                                                </div>
+                                            </div>
+                                            <div class="row mb-3">
                                                 <div class="col-md-6">
                                                     <label class="small text-muted">Description (Markdown)</label>
                                                     <textarea class="form-control form-control-sm" rows="5" x-model="task.description" placeholder="Markdown..."></textarea>

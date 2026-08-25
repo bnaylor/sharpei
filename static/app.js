@@ -758,6 +758,7 @@ function sharpei() {
 
         _snapshotFields(task) {
             return {
+                title: task.title ?? '',
                 description: task.description ?? '',
                 due_date_str: task.due_date_str,
                 priority: String(task.priority),  
@@ -772,7 +773,8 @@ function sharpei() {
             const snap = this.taskSnapshots[task.id];
             if (!snap) return false;
             const norm = v => (v == null ? '' : String(v));
-            return norm(snap.description) !== norm(task.description)
+            return norm(snap.title) !== norm(task.title)
+                || norm(snap.description) !== norm(task.description)
                 || snap.due_date_str !== task.due_date_str
                 || snap.priority !== task.priority
                 || snap.category_id !== task.category_id
