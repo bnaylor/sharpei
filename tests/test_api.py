@@ -469,6 +469,26 @@ class TestSubtasks:
         assert len(top_level) == 1
         assert top_level[0]["title"] == "Parent"
 
+    def test_get_task_by_id_includes_subtasks(self, api_client):
+        """Test that GET /api/tasks/{id} returns subtasks."""
+        parent = api_client.post("/api/tasks", json={"title": "Parent"}).json()
+        api_client.post("/api/tasks", json={
+            "title": "Child 1",
+            "parent_id": parent["id"]
+        })
+        api_client.post("/api/tasks", json={
+            "title": "Child 2",
+            "parent_id": parent["id"]
+        })
+
+        response = api_client.get(f"/api/tasks/{parent['id']}")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["subtasks"]) == 2
+        sub_titles = [s["title"] for s in data["subtasks"]]
+        assert "Child 1" in sub_titles
+        assert "Child 2" in sub_titles
+
 
 class TestPositionAutoAssignment:
     """Test automatic position assignment."""
