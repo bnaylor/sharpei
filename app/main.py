@@ -264,7 +264,7 @@ def bulk_delete_tasks(payload: schemas.BulkDeletePayload, db: Session = Depends(
 def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     return crud.create_task(db, task)
 
-@app.get("/api/tasks/{task_id}", response_model=schemas.Task)
+@app.get("/api/tasks/{task_id}", response_model=schemas.TaskWithSubtasks)
 def get_task(task_id: int, db: Session = Depends(get_db)):
     db_task = crud.get_task(db, task_id)
     if not db_task:
