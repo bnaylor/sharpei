@@ -382,5 +382,41 @@ class TestRecurrence:
         assert "2025-02-22" in result["due_date"]
 
 
+class TestDedicatedFieldHelpers:
+    """Test set_task_description and set_task_blockers convenience tools."""
+
+    def test_set_and_clear_task_description(self, mcp_server):
+        """Test setting and clearing markdown description via set_task_description."""
+        task = json.loads(mcp_server.create_task("Doc task"))
+        assert task["description"] is None
+
+        updated = json.loads(mcp_server.set_task_description(task["id"], "## Notes\n- Item 1"))
+        assert updated["description"] == "## Notes\n- Item 1"
+
+        cleared = json.loads(mcp_server.set_task_description(task["id"], ""))
+        assert cleared["description"] == ""
+
+    def test_set_task_description_not_found(self, mcp_server):
+        """Test set_task_description on missing task returns error dict."""
+        result = json.loads(mcp_server.set_task_description(99999, "nope"))
+        assert "error" in result
+
+    def test_set_and_clear_task_blockers(self, mcp_server):
+        """Test setting and clearing task dependencies via set_task_blockers."""
+        blocker = json.loads(mcp_server.create_task("Blocker task"))
+        blocked = json.loads(mcp_server.create_task("Blocked task"))
+
+        updated = json.loads(mcp_server.set_task_blockers(blocked["id"], [blocker["id"]]))
+        assert updated["blocked_by_ids"] == [blocker["id"]]
+
+        cleared = json.loads(mcp_server.set_task_blockers(blocked["id"], []))
+        assert cleared["blocked_by_ids"] == []
+
+    def test_set_task_blockers_not_found(self, mcp_server):
+        """Test set_task_blockers on missing task returns error dict."""
+        result = json.loads(mcp_server.set_task_blockers(99999, [1]))
+        assert "error" in result
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

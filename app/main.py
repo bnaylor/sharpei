@@ -1,36 +1,111 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Request, Response, BackgroundTasks, UploadFile, File
 from fastapi.responses import JSONResponse, FileResponse
-from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.routing import Route
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 from typing import List, Optional
+import hmac
 import shutil
 import os
 import glob
 from datetime import datetime, timedelta
 import json
 
+from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+
 from . import models, schemas, database, crud
 from .database import engine, get_db, DB_PATH
+from mcp_server import mcp as sharpei_mcp
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Sharpei")
 
-class APIKeyMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        api_key = os.getenv("SHARPEI_API_KEY")
-        # Only enforce on /api requests if an API Key is set in env
-        if api_key and request.url.path.startswith("/api"):
-            header_key = request.headers.get("X-API-Key")
-            if header_key != api_key:
-                return JSONResponse(
-                    status_code=401,
-                    content={"detail": "Unauthorized: Invalid or missing API Key"}
-                )
-        return await call_next(request)
+class MCPStreamableASGIApp:
+    """ASGI endpoint that manages a fresh StreamableHTTPSessionManager per FastAPI lifespan."""
+
+    def __init__(self, fastmcp):
+        self.fastmcp = fastmcp
+        self.session_manager: Optional[StreamableHTTPSessionManager] = None
+
+    @asynccontextmanager
+    async def lifespan(self):
+        self.session_manager = StreamableHTTPSessionManager(
+            app=self.fastmcp._mcp_server,
+            event_store=self.fastmcp._event_store,
+            json_response=self.fastmcp.settings.json_response,
+            stateless=self.fastmcp.settings.stateless_http,
+            security_settings=self.fastmcp.settings.transport_security,
+        )
+        async with self.session_manager.run():
+            yield
+        self.session_manager = None
+
+    async def __call__(self, scope, receive, send):
+        if self.session_manager is None:
+            resp = JSONResponse(status_code=503, content={"detail": "MCP session manager not running"})
+            await resp(scope, receive, send)
+            return
+        await self.session_manager.handle_request(scope, receive, send)
+
+
+mcp_asgi = MCPStreamableASGIApp(sharpei_mcp)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with mcp_asgi.lifespan():
+        yield
+
+
+app = FastAPI(title="Sharpei", lifespan=lifespan)
+app.router.routes.append(Route("/mcp", endpoint=mcp_asgi))
+app.router.routes.append(Route("/mcp/", endpoint=mcp_asgi))
+
+
+def _is_protected_path(path: str) -> bool:
+    return (
+        path == "/api"
+        or path.startswith("/api/")
+        or path == "/mcp"
+        or path.startswith("/mcp/")
+    )
+
+
+def _extract_api_token(headers: list[tuple[bytes, bytes]]) -> Optional[str]:
+    for raw_name, raw_val in headers:
+        name = raw_name.lower()
+        if name == b"x-api-key":
+            return raw_val.decode("latin-1").strip()
+        if name == b"authorization":
+            val = raw_val.decode("latin-1").strip()
+            if val.lower().startswith("bearer "):
+                return val[7:].strip()
+    return None
+
+
+class APIKeyMiddleware:
+    """Pure-ASGI auth middleware protecting /api and /mcp without buffering streams."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            api_key = os.getenv("SHARPEI_API_KEY")
+            if api_key and _is_protected_path(scope.get("path", "")):
+                token = _extract_api_token(scope.get("headers", []))
+                if not token or not hmac.compare_digest(token, api_key):
+                    resp = JSONResponse(
+                        status_code=401,
+                        content={"detail": "Unauthorized: Invalid or missing API Key"},
+                    )
+                    await resp(scope, receive, send)
+                    return
+        await self.app(scope, receive, send)
+
 
 app.add_middleware(APIKeyMiddleware)
 
@@ -234,10 +309,17 @@ def get_tasks(
     category_id: int = None, 
     q: str = None, 
     show_archived: bool = False, 
+    priority: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     check_and_trigger_backup(background_tasks)
-    return crud.get_tasks(db, category_id=category_id, search=q, show_archived=show_archived)
+    return crud.get_tasks(
+        db,
+        category_id=category_id,
+        search=q,
+        show_archived=show_archived,
+        priority=priority,
+    )
 
 @app.post("/api/tasks/archive-completed")
 def archive_completed_tasks(category_id: int = None, db: Session = Depends(get_db)):

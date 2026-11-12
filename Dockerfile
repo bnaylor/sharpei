@@ -11,6 +11,7 @@ COPY app/ app/
 COPY templates/ templates/
 COPY static/ static/
 COPY assets/ assets/
+COPY mcp_server.py .
 COPY sharpei.py .
 
 # Persistent data directory for SQLite db

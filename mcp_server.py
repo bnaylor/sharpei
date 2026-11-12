@@ -17,23 +17,29 @@ from datetime import datetime
 from typing import List, Optional
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
-from app.models import Task, Category
-from app.database import SessionLocal
-from app import crud, schemas
+from app import crud, database, schemas
+from app.models import Category, Task
+
+_DEFAULT_SESSION_LOCAL = database.SessionLocal
+SessionLocal = _DEFAULT_SESSION_LOCAL
 
 # Create MCP server
 # Use WARNING log level to prevent debug output from corrupting stdio protocol
-mcp = FastMCP("Sharpei TODO", log_level="WARNING")
+mcp = FastMCP(
+    "Sharpei TODO",
+    log_level="WARNING",
+    json_response=True,
+    stateless_http=True,
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+)
 
 
 def get_db():
-    """Get a database session."""
-    db = SessionLocal()
-    try:
-        return db
-    finally:
-        pass  # Caller is responsible for closing, or we could use context manager if we refactor more
+    """Get a database session, honoring test overrides on either mcp_server or app.database."""
+    factory = SessionLocal if SessionLocal is not _DEFAULT_SESSION_LOCAL else database.SessionLocal
+    return factory()
 
 
 def task_to_dict(task: Task) -> dict:
@@ -307,6 +313,41 @@ def update_task(
         return json.dumps(task_to_dict(task), indent=2)
     finally:
         db.close()
+
+
+@mcp.tool()
+def set_task_description(task_id: int, description: str) -> str:
+    """Set the markdown description on a task.
+
+    Replaces whatever description is currently set. Pass an empty string
+    to clear the description.
+
+    Args:
+        task_id: The ID of the task (required)
+        description: The new markdown description (required). Pass "" to clear.
+
+    Returns:
+        The updated task JSON
+    """
+    return update_task(task_id=task_id, description=description)
+
+
+@mcp.tool()
+def set_task_blockers(task_id: int, blocked_by_ids: List[int]) -> str:
+    """Set which tasks block this task (dependencies).
+
+    Replaces any existing blocker list. Pass an empty list to clear all
+    dependencies.
+
+    Args:
+        task_id: The ID of the task to update (required)
+        blocked_by_ids: List of task IDs that this task depends on (required).
+            Pass [] to clear all dependencies.
+
+    Returns:
+        The updated task JSON
+    """
+    return update_task(task_id=task_id, blocked_by_ids=blocked_by_ids)
 
 
 @mcp.tool()

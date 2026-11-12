@@ -68,6 +68,8 @@ def api_client(test_db, monkeypatch):
     """Create a test client for the FastAPI app with test database."""
     from starlette.testclient import TestClient
 
+    monkeypatch.delenv("SHARPEI_API_KEY", raising=False)
+
     # Monkeypatch the database before importing the app
     from app import database
     monkeypatch.setattr(database, 'engine', test_db['engine'])
@@ -103,6 +105,8 @@ def live_server(test_db, monkeypatch):
 
     Yields the base URL of the server.
     """
+    monkeypatch.delenv("SHARPEI_API_KEY", raising=False)
+
     # Monkeypatch the database before importing the app
     from app import database
     monkeypatch.setattr(database, 'engine', test_db['engine'])

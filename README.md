@@ -106,13 +106,13 @@ See [doc/quick-add.md](doc/quick-add.md) for full documentation.
 
 ## MCP Server
 
-Sharpei includes an MCP server for AI assistant integration:
+Sharpei exposes a built-in Streamable HTTP MCP endpoint at `/mcp` whenever the server is running (authenticated via `Authorization: Bearer <API_KEY>` or `X-API-Key: <API_KEY>` when `--api-key` / `SHARPEI_API_KEY` is set), as well as a local stdio entry point:
 
 ```bash
 python mcp_server.py
 ```
 
-See [doc/mcp.md](doc/mcp.md) for full documentation.
+See [doc/mcp.md](doc/mcp.md) for full documentation and client configs (Claude Code, Antigravity, Claude Desktop).
 
 ## Testing
 

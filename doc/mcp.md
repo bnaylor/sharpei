@@ -15,15 +15,54 @@ pip install mcp
 
 ### Configuration
 
-Add the following to your MCP client's configuration file:
+Sharpei exposes MCP in two ways:
+1. **Native Streamable HTTP (`/mcp`)** — built directly into the FastAPI server (`sharpei.py` / Docker container). Recommended whenever Sharpei is running as a service (local or remote).
+2. **Standalone Stdio (`mcp_server.py`)** — spawns a local subprocess talking directly to the local SQLite database.
 
-**For Claude Code** (`~/.claude/claude_code_config.json`):
+#### Remote / Hosted Streamable HTTP (`/mcp`)
+
+When `SHARPEI_API_KEY` (or `--api-key`) is configured on the server, `/mcp` accepts either `Authorization: Bearer <key>` or `X-API-Key: <key>`.
+
+**For Claude Code** (`~/.claude.json` or `.mcp.json`):
 
 ```json
 {
   "mcpServers": {
     "sharpei": {
-      "command": "python",
+      "type": "http",
+      "url": "https://sharpei.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+**For Antigravity** (`~/.gemini/antigravity/mcp_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "sharpei": {
+      "serverUrl": "https://sharpei.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+#### Local Stdio (`mcp_server.py`)
+
+**For Claude Code** (`~/.claude.json`):
+
+```json
+{
+  "mcpServers": {
+    "sharpei": {
+      "command": "/path/to/sharpei/venv/bin/python",
       "args": ["/path/to/sharpei/mcp_server.py"],
       "cwd": "/path/to/sharpei"
     }
@@ -119,6 +158,26 @@ Update an existing task. Only provided fields are updated.
 | `category_id` | int | No | New category (-1 to remove) |
 | `completed` | bool | No | Completion status |
 | `archived` | bool | No | Archive status |
+
+**Returns:** The updated task.
+
+#### `set_task_description(task_id, description)`
+Set or clear the markdown description on a task (`""` to clear).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `task_id` | int | Yes | Task ID to update |
+| `description` | string | Yes | New markdown description (`""` to clear) |
+
+**Returns:** The updated task.
+
+#### `set_task_blockers(task_id, blocked_by_ids)`
+Replace the list of tasks that block this task (`[]` to clear all dependencies).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `task_id` | int | Yes | Task ID to update |
+| `blocked_by_ids` | list[int] | Yes | Blocking task IDs (`[]` to clear) |
 
 **Returns:** The updated task.
 

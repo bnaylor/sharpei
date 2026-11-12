@@ -4,7 +4,8 @@ sqlalchemy
 pydantic
 jinja2
 python-multipart
-mcp
+mcp>=1.8,<2
+httpx
 pytest
 pytest-playwright
 playwright
